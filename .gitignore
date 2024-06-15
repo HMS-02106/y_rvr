@@ -74,3 +74,9 @@ crashlytics-build.properties
 # others
 .DS_Store
 .vscode/*
+
+# assets
+/[Aa]ssets/Plugins/*
+
+# R3, Nuget
+/[Aa]ssets/Packages/*
