@@ -7,7 +7,7 @@ using UnityUtility.Extensions;
 /// <summary>
 /// リバーシ盤面のマス
 /// </summary>
-public class Square : MonoBehaviour
+public class Square : MouseHandleableMonoBehaviour
 {
     [SerializeField]
     private SpriteRenderer spriteRenderer;
@@ -16,19 +16,14 @@ public class Square : MonoBehaviour
 
     public Vector2 SpriteSize => spriteRenderer.bounds.size.DisZ();
 
-    void OnMouseEnter() {
-        border.Status = SquareBorder.BorderType.Selected;
-    }
-
-    void OnMouseExit() {
-        border.Status = SquareBorder.BorderType.None;
-    }
-
-    void OnMouseDown() {
-        border.Status = SquareBorder.BorderType.Pressed;
-    }
-
-    void OnMouseUp() {
-        border.Status = SquareBorder.BorderType.Selected;
+    void Start() {
+        this.OnEnter += () => border.Status = SquareBorder.BorderType.Selected;
+        this.OnExit += () => border.Status = SquareBorder.BorderType.None;
+        this.OnDown += () => border.Status = SquareBorder.BorderType.Pressed;
+        this.OnUp += () => border.Status = SquareBorder.BorderType.None;
+        this.OnDragOut += () => border.Status = SquareBorder.BorderType.None;
+        this.OnClick += () => {
+            print("clicked");
+        };
     }
 }
