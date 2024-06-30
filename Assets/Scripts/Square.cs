@@ -13,17 +13,25 @@ public class Square : MouseHandleableMonoBehaviour
     private SpriteRenderer spriteRenderer;
     [SerializeField]
     private SquareBorder border;
+    [SerializeField]
+    private Stone stone;
 
     public Vector2 SpriteSize => spriteRenderer.bounds.size.DisZ();
 
-    void Start() {
+    void Start()
+    {
         this.OnEnter += () => border.Status = SquareBorder.BorderType.Selected;
         this.OnExit += () => border.Status = SquareBorder.BorderType.None;
         this.OnDown += () => border.Status = SquareBorder.BorderType.Pressed;
         this.OnUp += () => border.Status = SquareBorder.BorderType.None;
         this.OnDragOut += () => border.Status = SquareBorder.BorderType.None;
-        this.OnClick += () => {
-            print("clicked");
+        this.OnClick += () =>
+        {
+            if (stone.IsEmpty) {
+                stone.SetBlack();
+            } else {
+                stone.TurnOver();
+            }
         };
     }
 }
