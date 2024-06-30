@@ -244,7 +244,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   size: {x: 8, y: 8}
-  square: {fileID: 3049797671349182171, guid: 7112e45c445694d25bec82014165699a, type: 3}
+  originalSquare: {fileID: 3049797671349182171, guid: 7112e45c445694d25bec82014165699a, type: 3}
 --- !u!4 &1003582799
 Transform:
   m_ObjectHideFlags: 0
