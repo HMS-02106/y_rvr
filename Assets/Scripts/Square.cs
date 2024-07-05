@@ -18,6 +18,9 @@ public class Square : MouseHandleableMonoBehaviour
 
     public Vector2 SpriteSize => spriteRenderer.bounds.size.DisZ();
 
+    public void SetBlack() => stone.SetBlack();
+    public void SetWhite() => stone.SetWhite();
+
     void Start()
     {
         this.OnEnter += () => border.Status = SquareBorder.BorderType.Selected;

@@ -25,6 +25,7 @@ public class Stone : MonoBehaviour
     
     public void SetWhite() => SetStatus(StatusType.White);
     public void SetBlack() => SetStatus(StatusType.Black);
+
     public void TurnOver() {
         if (status == StatusType.Black) {
             SetStatus(StatusType.White);
@@ -36,10 +37,14 @@ public class Stone : MonoBehaviour
     }
 
     void Start() {
-        SetStatus(StatusType.Empty);
+        // 初期値が与えられていない場合のみ、Emptyで初期化する
+        if (status == StatusType.NonInitialized) {
+            SetStatus(StatusType.Empty);
+        }
     }
 
     enum StatusType {
+        NonInitialized, 
         Empty,
         White,
         Black,
