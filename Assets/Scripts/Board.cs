@@ -14,8 +14,8 @@ using System.IO;
 using System;
 
 public interface IReadOnlyBoard {
-    IReadOnlyMatrix<IReadOnlySquare> Squares { get; }
-    IEnumerable<IReadOnlySquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction);
+    IReadOnlyMatrix<ISquare> Squares { get; }
+    IEnumerable<ISquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction);
 }
 public class Board : MonoBehaviour, IReadOnlyBoard
 {
@@ -26,8 +26,8 @@ public class Board : MonoBehaviour, IReadOnlyBoard
 
     private Matrix<Square> squareMatrix;
 
-    public IReadOnlyMatrix<IReadOnlySquare> Squares => squareMatrix;
-    public IEnumerable<IReadOnlySquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction) => squareMatrix.GetDirectionEnumerator(origin, direction);
+    public IReadOnlyMatrix<ISquare> Squares => squareMatrix;
+    public IEnumerable<ISquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction) => squareMatrix.GetDirectionEnumerator(origin, direction);
 
     void Start() {
         squareMatrix = new Matrix<Square>(size.y, size.x);
@@ -52,6 +52,11 @@ public class Board : MonoBehaviour, IReadOnlyBoard
                 square
                     .ObservableExit
                     .Subscribe(_ => square.BorderStatus = BorderStatus.None);
+                square
+                    .ObservableClick
+                    .Select(_ => stoneProvider.GetNextStoneStatus())
+                    .Where(stoneStatus => validator.Validate(index, stoneStatus))
+                    .Subscribe(s => square.Stone.Status = s);
 
                 // 行列にセット
                 squareMatrix.Set(square, index);

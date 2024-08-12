@@ -26,6 +26,10 @@ public class PlacementValidator : IPlacementValidator
 
     public bool Validate(MatrixIndex matrixIndex, StoneStatus stoneStatus)
     {
+        // すでに置かれている場所には置けない
+        if (board.Squares.Get(matrixIndex).Stone.IsExist) {
+            return false;
+        }
         var greppedDirectionStones = EnumUtils.All<Direction8>()
             .Where(direction =>
             {

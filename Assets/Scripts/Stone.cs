@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IReadOnlyStone {
-    StoneStatus Status { get; }
+public interface IStone {
+    StoneStatus Status { get; set; }
     bool IsOpposite(StoneStatus status);
+    bool IsExist { get; }
 }
-public class Stone : MonoBehaviour, IReadOnlyStone
+public class Stone : MonoBehaviour, IStone
 {
     private static readonly Dictionary<StoneStatus, Color> StatusColors = new Dictionary<StoneStatus,Color>() {
         { StoneStatus.Empty, new Color(0,0,0,0) },
@@ -27,6 +28,7 @@ public class Stone : MonoBehaviour, IReadOnlyStone
             this.spriteRenderer.color = StatusColors[value];
         }
     }
+    public bool IsExist => stoneStatus == StoneStatus.White || stoneStatus == StoneStatus.Black;
 
     public bool IsOpposite(StoneStatus status) {
         return status switch {
