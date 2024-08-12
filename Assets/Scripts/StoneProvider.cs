@@ -4,6 +4,7 @@
 public interface IStoneProvider {
     Stone GetStone();
     StoneStatus GetNextStoneStatus();
+    void Switch();
 }
 public class StoneProvider : IStoneProvider
 {
@@ -18,4 +19,6 @@ public class StoneProvider : IStoneProvider
     {
         return isBlack ? StoneStatus.Black : StoneStatus.White;
     }
+
+    public void Switch() => isBlack = !isBlack;
 }

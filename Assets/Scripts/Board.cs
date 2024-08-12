@@ -56,7 +56,11 @@ public class Board : MonoBehaviour, IReadOnlyBoard
                     .ObservableClick
                     .Select(_ => stoneProvider.GetNextStoneStatus())
                     .Where(stoneStatus => validator.Validate(index, stoneStatus))
-                    .Subscribe(s => square.Stone.Status = s);
+                    .Subscribe(s =>
+                    {
+                        square.Stone.Status = s;
+                        stoneProvider.Switch();
+                    });
 
                 // 行列にセット
                 squareMatrix.Set(square, index);
