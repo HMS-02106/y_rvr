@@ -1,8 +1,18 @@
 
 using System;
+using R3;
 using UnityEngine;
 
-public class MouseHandleableMonoBehaviour : MonoBehaviour {
+public interface IObservableMouseHandler {
+    Observable<Unit> ObservableClick { get; }
+    Observable<Unit> ObservableDown { get; }
+    Observable<Unit> ObservableUp { get; }
+    Observable<Unit> ObservableEnter { get; }
+    Observable<Unit> ObservableExit { get; }
+    Observable<Unit> ObservableDragIn { get; }
+    Observable<Unit> ObservableDragOut { get; }
+}
+public class MouseHandleableMonoBehaviour : MonoBehaviour, IObservableMouseHandler {
     public enum MouseStatus {
         None,
         Hover,
@@ -11,6 +21,15 @@ public class MouseHandleableMonoBehaviour : MonoBehaviour {
         DragOut,
     }
 
+    private Subject<Unit> clickSubject = new Subject<Unit>();
+    private Subject<Unit> downSubject = new Subject<Unit>();
+    private Subject<Unit> upSubject = new Subject<Unit>();
+    private Subject<Unit> enterSubject = new Subject<Unit>();
+    private Subject<Unit> exitSubject = new Subject<Unit>();
+    private Subject<Unit> dragInSubject = new Subject<Unit>();
+    private Subject<Unit> dragOutSubject = new Subject<Unit>();
+
+
     protected MouseStatus status;
 
     void OnMouseEnter() {
@@ -18,34 +37,34 @@ public class MouseHandleableMonoBehaviour : MonoBehaviour {
             status = MouseStatus.DragIn;
         } else {
             status = MouseStatus.Hover;
-            OnEnter?.Invoke();
+            enterSubject.OnNext(Unit.Default);
         }
     }
     void OnMouseExit() {
         if (Input.GetMouseButton(0)) {
             status = MouseStatus.DragOut;
-            OnDragOut?.Invoke();
+            dragOutSubject.OnNext(Unit.Default);
         } else {
             status = MouseStatus.None;
-            OnExit?.Invoke();
+            exitSubject.OnNext(Unit.Default);
         }
     }
     void OnMouseDown() {
         status = MouseStatus.Down;
-        OnDown?.Invoke();
+        downSubject.OnNext(Unit.Default);
     }
     void OnMouseUp() {
         if (status == MouseStatus.Down) {
             status = MouseStatus.None;
-            OnClick?.Invoke();
+            clickSubject.OnNext(Unit.Default);
         }
     }
 
-    public event Action OnClick;
-    public event Action OnDown;
-    public event Action OnUp;
-    public event Action OnEnter;
-    public event Action OnExit;
-    public event Action OnDragIn;
-    public event Action OnDragOut;
+    public Observable<Unit> ObservableClick => clickSubject.AsObservable();
+    public Observable<Unit> ObservableDown => downSubject.AsObservable();
+    public Observable<Unit> ObservableUp => upSubject.AsObservable();
+    public Observable<Unit> ObservableEnter => enterSubject.AsObservable();
+    public Observable<Unit> ObservableExit => exitSubject.AsObservable();
+    public Observable<Unit> ObservableDragIn => dragInSubject.AsObservable();
+    public Observable<Unit> ObservableDragOut => dragOutSubject.AsObservable();
 }

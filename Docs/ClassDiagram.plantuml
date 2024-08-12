@@ -1,0 +1,21 @@
+@startuml rvr
+
+class Square
+
+class Board
+
+class SquareBoarder
+
+class Stone
+
+class MouseHandleableMonoBehaviour
+
+class GameManager
+
+MouseHandleableMonoBehaviour <|--- Square
+GameManager o-- Board
+Board o-- Square
+Square o-- SquareBoarder
+Square o-- Stone
+
+@enduml

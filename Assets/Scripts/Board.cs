@@ -5,8 +5,19 @@ using Sirenix.Utilities;
 using UnityEngine;
 using UnityUtility.Linq;
 using UnityUtility.Collections;
+using Sirenix.OdinInspector.Editor.Examples;
+using UnityUtility.Enums;
+using Sirenix.Reflection.Editor;
+using R3;
+using Unity.Mathematics;
+using System.IO;
+using System;
 
-public class Board : MonoBehaviour
+public interface IReadOnlyBoard {
+    IReadOnlyMatrix<IReadOnlySquare> Squares { get; }
+    IEnumerable<IReadOnlySquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction);
+}
+public class Board : MonoBehaviour, IReadOnlyBoard
 {
     [SerializeField]
     private Vector2Int size;
@@ -15,18 +26,35 @@ public class Board : MonoBehaviour
 
     private Matrix<Square> squareMatrix;
 
+    public IReadOnlyMatrix<IReadOnlySquare> Squares => squareMatrix;
+    public IEnumerable<IReadOnlySquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction) => squareMatrix.GetDirectionEnumerator(origin, direction);
+
     void Start() {
         squareMatrix = new Matrix<Square>(size.y, size.x);
+
+        IPlacementValidator validator = new PlacementValidator(this);
+        IStoneProvider stoneProvider = new StoneProvider();
 
         EnumerableFactory
             .FromVector2Int(size)
             .ForEach(coord => {
-                var newSquare = Instantiate(originalSquare, transform);
-                var squareSize = newSquare.SpriteSize;
-                newSquare.transform.position = new Vector2(coord.x * squareSize.x, coord.y * squareSize.y);
+                Square square = Instantiate(originalSquare, transform);
+                var squareSize = square.SpriteSize;
+                square.transform.position = new Vector2(coord.x * squareSize.x, coord.y * squareSize.y);
+
+                MatrixIndex index = new MatrixIndex(coord.y, coord.x);
+                //これStoneProviderから提供してもらって、Select(_ => StoneProvider.Provide)でStoneを受け取り、それをValidateすべきだよなあ
+                square
+                    .ObservableEnter
+                    .Select(_ => stoneProvider.GetNextStoneStatus())
+                    .Where(stoneStatus => validator.Validate(index, stoneStatus))
+                    .Subscribe(_ => square.BorderStatus = BorderStatus.Selected);
+                square
+                    .ObservableExit
+                    .Subscribe(_ => square.BorderStatus = BorderStatus.None);
 
                 // 行列にセット
-                squareMatrix.Set(newSquare, coord.y, coord.x);
+                squareMatrix.Set(square, index);
             });
         // 中心に持ってくる
         this.transform.position = new Vector2(
@@ -35,9 +63,11 @@ public class Board : MonoBehaviour
         );
 
         // 中心のマスに初期石をセットする
-        squareMatrix.Get(size.x / 2 - 1, size.y / 2 - 1).SetWhite();
-        squareMatrix.Get(size.x / 2, size.y / 2).SetWhite();
-        squareMatrix.Get(size.x / 2, size.y / 2 - 1).SetBlack();
-        squareMatrix.Get(size.x / 2 - 1, size.y / 2).SetBlack();
+        squareMatrix.Get(size.x / 2 - 1, size.y / 2 - 1).StoneStatus = StoneStatus.White;
+        squareMatrix.Get(size.x / 2, size.y / 2).StoneStatus = StoneStatus.White;
+        squareMatrix.Get(size.x / 2, size.y / 2 - 1).StoneStatus = StoneStatus.Black;
+        squareMatrix.Get(size.x / 2 - 1, size.y / 2).StoneStatus = StoneStatus.Black;
     }
+
+    
 }

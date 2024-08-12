@@ -4,10 +4,17 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityUtility.Extensions;
 
+public interface IReadOnlySquare {
+    IReadOnlyStone Stone { get; }
+}
+public interface ISquare : IReadOnlySquare {
+
+}
+
 /// <summary>
 /// リバーシ盤面のマス
 /// </summary>
-public class Square : MouseHandleableMonoBehaviour
+public class Square : MouseHandleableMonoBehaviour, ISquare // マウスを検知したらBoardにValidateを依頼するだけ。Squareが自発的にStoneを置いたりBoarderを変えたりしない。
 {
     [SerializeField]
     private SpriteRenderer spriteRenderer;
@@ -17,24 +24,14 @@ public class Square : MouseHandleableMonoBehaviour
     private Stone stone;
 
     public Vector2 SpriteSize => spriteRenderer.bounds.size.DisZ();
+    public IReadOnlyStone Stone => stone;
 
-    public void SetBlack() => stone.SetBlack();
-    public void SetWhite() => stone.SetWhite();
-
-    void Start()
-    {
-        this.OnEnter += () => border.Status = SquareBorder.BorderType.Selected;
-        this.OnExit += () => border.Status = SquareBorder.BorderType.None;
-        this.OnDown += () => border.Status = SquareBorder.BorderType.Pressed;
-        this.OnUp += () => border.Status = SquareBorder.BorderType.None;
-        this.OnDragOut += () => border.Status = SquareBorder.BorderType.None;
-        this.OnClick += () =>
-        {
-            if (stone.IsEmpty) {
-                stone.SetBlack();
-            } else {
-                stone.TurnOver();
-            }
-        };
+    public StoneStatus StoneStatus { 
+        get => stone.Status;
+        set => stone.Status = value;
+    }
+    public BorderStatus BorderStatus {
+        get => border.Status;
+        set => border.Status = value;
     }
 }
