@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityUtility.Collections;
 using UnityUtility.Extensions;
 
 public interface ISquare {
@@ -19,6 +21,9 @@ public class Square : MouseHandleableMonoBehaviour, ISquare // マウスを検�
     private SquareBorder border;
     [SerializeField]
     private Stone stone;
+
+    // for debug
+    public TextMeshPro debugText;
 
     public Vector2 SpriteSize => spriteRenderer.bounds.size.DisZ();
     public IStone Stone => stone;

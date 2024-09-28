@@ -13,11 +13,11 @@ using Unity.Mathematics;
 using System.IO;
 using System;
 
-public interface IReadOnlyBoard {
+public interface IBoard {
     IReadOnlyMatrix<ISquare> Squares { get; }
     IEnumerable<ISquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction);
 }
-public class Board : MonoBehaviour, IReadOnlyBoard
+public class Board : MonoBehaviour, IBoard
 {
     [SerializeField]
     private Vector2Int size;
@@ -32,7 +32,7 @@ public class Board : MonoBehaviour, IReadOnlyBoard
     void Start() {
         squareMatrix = new Matrix<Square>(size.y, size.x);
 
-        IPlacementValidator validator = new PlacementValidator(this);
+        IStoneFlipper flipper = new StoneFlipper(this);
         IStoneProvider stoneProvider = new StoneProvider();
 
         EnumerableFactory
@@ -41,13 +41,14 @@ public class Board : MonoBehaviour, IReadOnlyBoard
                 Square square = Instantiate(originalSquare, transform);
                 var squareSize = square.SpriteSize;
                 square.transform.position = new Vector2(coord.x * squareSize.x, coord.y * squareSize.y);
+                square.debugText.text = coord.ToString();
 
                 MatrixIndex index = new MatrixIndex(coord.y, coord.x);
                 //これStoneProviderから提供してもらって、Select(_ => StoneProvider.Provide)でStoneを受け取り、それをValidateすべきだよなあ
                 square
                     .ObservableEnter
                     .Select(_ => stoneProvider.GetNextStoneStatus())
-                    .Where(stoneStatus => validator.Validate(index, stoneStatus))
+                    .Where(stoneStatus => flipper.Validate(index, stoneStatus))
                     .Subscribe(_ => square.BorderStatus = BorderStatus.Selected);
                 square
                     .ObservableExit
@@ -55,11 +56,12 @@ public class Board : MonoBehaviour, IReadOnlyBoard
                 square
                     .ObservableClick
                     .Select(_ => stoneProvider.GetNextStoneStatus())
-                    .Where(stoneStatus => validator.Validate(index, stoneStatus))
+                    .Where(stoneStatus => flipper.Validate(index, stoneStatus))
                     .Subscribe(s =>
                     {
                         square.Stone.Status = s;
                         stoneProvider.Switch();
+                        flipper.Put(index, s);
                     });
 
                 // 行列にセット
