@@ -3,34 +3,46 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Stone : MonoBehaviour
+public interface IStone {
+    StoneStatus Status { get; set; }
+    bool IsOpposite(StoneStatus status);
+    bool IsExist { get; }
+}
+public class Stone : MonoBehaviour, IStone
 {
-    private static readonly Dictionary<StatusType, Color> StatusColors = new Dictionary<StatusType,Color>() {
-        { StatusType.Empty, new Color(0,0,0,0) },
-        { StatusType.Black, Color.black },
-        { StatusType.White, Color.white },
+    private static readonly Dictionary<StoneStatus, Color> StatusColors = new Dictionary<StoneStatus,Color>() {
+        { StoneStatus.Empty, new Color(0,0,0,0) },
+        { StoneStatus.Black, Color.black },
+        { StoneStatus.White, Color.white },
     };
     
     [SerializeField]
     private SpriteRenderer spriteRenderer;
+    [SerializeField]
+    private StoneStatus stoneStatus;
 
-    private StatusType status;
+    public StoneStatus Status {
+        get => stoneStatus;
+        set {
+            this.stoneStatus = value;
+            this.spriteRenderer.color = StatusColors[value];
+        }
+    }
+    public bool IsExist => stoneStatus == StoneStatus.White || stoneStatus == StoneStatus.Black;
 
-    private void SetStatus(StatusType status) {
-        this.status = status;
-        this.spriteRenderer.color = StatusColors[status];
+    public bool IsOpposite(StoneStatus status) {
+        return status switch {
+            StoneStatus.Black => Status == StoneStatus.White,
+            StoneStatus.White => Status == StoneStatus.Black,
+            _ => false,
+        };
     }
 
-    public bool IsEmpty => status == StatusType.Empty;
-    
-    public void SetWhite() => SetStatus(StatusType.White);
-    public void SetBlack() => SetStatus(StatusType.Black);
-
     public void TurnOver() {
-        if (status == StatusType.Black) {
-            SetStatus(StatusType.White);
-        } else if (status == StatusType.White) {
-            SetStatus(StatusType.Black);
+        if (Status == StoneStatus.Black) {
+            Status = StoneStatus.White;
+        } else if (Status == StoneStatus.White) {
+            Status = StoneStatus.Black;
         } else {
             throw new InvalidOperationException("石が置かれていないため裏返しできません");
         }
@@ -38,15 +50,14 @@ public class Stone : MonoBehaviour
 
     void Start() {
         // 初期値が与えられていない場合のみ、Emptyで初期化する
-        if (status == StatusType.NonInitialized) {
-            SetStatus(StatusType.Empty);
+        if (Status == StoneStatus.NonInitialized) {
+            Status = StoneStatus.Empty;
         }
     }
-
-    enum StatusType {
-        NonInitialized, 
-        Empty,
-        White,
-        Black,
-    }
+}
+public enum StoneStatus {
+    NonInitialized, 
+    Empty,
+    White,
+    Black,
 }

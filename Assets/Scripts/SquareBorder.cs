@@ -4,23 +4,17 @@ using UnityEngine;
 
 public class SquareBorder : MonoBehaviour
 {
-    public enum BorderType {
-        None,
-        Selected,
-        Pressed,
-    }
-
-    private Dictionary<BorderType, Color> borderColors = new Dictionary<BorderType, Color>() {
-        { BorderType.None, Color.clear },
-        { BorderType.Selected, Color.white },
-        { BorderType.Pressed, Color.yellow },
+    private Dictionary<BorderStatus, Color> borderColors = new Dictionary<BorderStatus, Color>() {
+        { BorderStatus.None, Color.clear },
+        { BorderStatus.Selected, Color.white },
+        { BorderStatus.Pressed, Color.yellow },
     };
 
     [SerializeField]
     private SpriteRenderer spriteRenderer;
 
-    private BorderType status;
-    public BorderType Status { 
+    private BorderStatus status;
+    public BorderStatus Status { 
         get => status;
         set {
             spriteRenderer.color = borderColors[value];
@@ -29,6 +23,12 @@ public class SquareBorder : MonoBehaviour
     }
 
     void Start() {
-        this.Status = BorderType.None;
+        this.Status = BorderStatus.None;
     }
+}
+
+public enum BorderStatus {
+    None,
+    Selected,
+    Pressed,
 }
