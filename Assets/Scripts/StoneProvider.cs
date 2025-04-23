@@ -1,12 +1,7 @@
 // 今からおこうとしているStoneを提供する
 
 
-public interface IStoneProvider {
-    Stone GetStone();
-    StoneStatus GetNextStoneStatus();
-    void Switch();
-}
-public class StoneProvider : IStoneProvider
+public class StoneProvider
 {
     private bool isBlack = false;
 

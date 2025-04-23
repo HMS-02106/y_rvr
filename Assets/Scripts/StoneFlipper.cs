@@ -34,7 +34,7 @@ public class StoneFlipper : IStoneFlipper
     public bool Validate(MatrixIndex matrixIndex, StoneStatus stoneStatus)
     {
         // すでに置かれている場所には置けない
-        if (board.Squares.Get(matrixIndex).Stone.IsExist) {
+        if (board.Squares.Get(matrixIndex).IsStoneExists) {
             return false;
         }
         foreach(var stones in GetFlippableStonesPerDirection(matrixIndex, stoneStatus)) {
@@ -62,7 +62,7 @@ public class StoneFlipper : IStoneFlipper
     /// <param name="matrixIndex">石を置く位置</param>
     /// <param name="stoneStatus">石の色</param>
     /// <returns></returns>
-    private IEnumerable<IEnumerable<IStone>> GetFlippableStonesPerDirection(MatrixIndex matrixIndex, StoneStatus stoneStatus) =>
+    private IEnumerable<IEnumerable<Stone>> GetFlippableStonesPerDirection(MatrixIndex matrixIndex, StoneStatus stoneStatus) =>
         EnumUtils.All<Direction8>()
             .Where(direction =>
             {

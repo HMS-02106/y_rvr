@@ -14,10 +14,10 @@ using System.IO;
 using System;
 
 public interface IBoard {
-    IReadOnlyMatrix<ISquare> Squares { get; }
-    IEnumerable<ISquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction);
+    IReadOnlyMatrix<Square> Squares { get; }
+    IEnumerable<Square> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction);
 }
-public class Board : MonoBehaviour, IBoard
+public class Board : MonoBehaviour, IBoard, IObservableScore
 {
     [SerializeField]
     private Vector2Int size;
@@ -26,14 +26,21 @@ public class Board : MonoBehaviour, IBoard
 
     private Matrix<Square> squareMatrix;
 
-    public IReadOnlyMatrix<ISquare> Squares => squareMatrix;
-    public IEnumerable<ISquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction) => squareMatrix.GetDirectionEnumerator(origin, direction);
+    private Subject<int> blackScoreSubject = new();
+    private Subject<int> whiteScoreSubject = new();
+
+    public IReadOnlyMatrix<Square> Squares => squareMatrix;
+
+    public Observable<int> ObservableBlackScore => blackScoreSubject.AsObservable();
+    public Observable<int> ObservableWhiteScore => whiteScoreSubject.AsObservable();
+
+    public IEnumerable<Square> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction) => squareMatrix.GetDirectionEnumerator(origin, direction);
 
     void Start() {
         squareMatrix = new Matrix<Square>(size.y, size.x);
 
-        IStoneFlipper flipper = new StoneFlipper(this);
-        IStoneProvider stoneProvider = new StoneProvider();
+        StoneFlipper flipper = new StoneFlipper(this);
+        StoneProvider stoneProvider = new StoneProvider();
 
         EnumerableFactory
             .FromVector2Int(size)
@@ -59,11 +66,29 @@ public class Board : MonoBehaviour, IBoard
                     .Where(stoneStatus => flipper.Validate(index, stoneStatus))
                     .Subscribe(s =>
                     {
-                        square.Stone.Status = s;
+                        square.StoneStatus = s;
                         stoneProvider.Switch();
                         flipper.Put(index, s);
                     });
-
+                // squareの状態が変わったらスコアを更新
+                square.ObservableStoneChanged
+                    .Subscribe(_ =>
+                    {
+                        int black = 0, white = 0;
+                        foreach (var square in squareMatrix)
+                        {
+                            if (square.IsBlack)
+                            {
+                                black++;
+                            }
+                            else if (square.IsWhite)
+                            {
+                                white++;
+                            }
+                        }
+                        blackScoreSubject.OnNext(black);
+                        whiteScoreSubject.OnNext(white);
+                    });
                 // 行列にセット
                 squareMatrix.Set(square, index);
             });
