@@ -1,11 +1,12 @@
 using TMPro;
 using UnityEngine;
 using R3;
+using Sirenix.OdinInspector;
 
-public class ScoreBoard : MonoBehaviour
+public class ScoreBoard : SerializedMonoBehaviour
 {
     [SerializeField]
-    private Board board;
+    private IObservableScore observableScore;
     [SerializeField]
     private TextMeshProUGUI blackText;
     [SerializeField]
@@ -13,7 +14,7 @@ public class ScoreBoard : MonoBehaviour
 
     void Start()
     {
-        board.ObservableBlackScore.Subscribe(score => blackText.text = score.ToString());
-        board.ObservableWhiteScore.Subscribe(score => whiteText.text = score.ToString());
+        observableScore.ObservableBlackScore.Subscribe(score => blackText.text = score.ToString());
+        observableScore.ObservableWhiteScore.Subscribe(score => whiteText.text = score.ToString());
     }
 }

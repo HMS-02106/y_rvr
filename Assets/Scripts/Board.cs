@@ -17,7 +17,7 @@ public interface IBoard {
     IReadOnlyMatrix<Square> Squares { get; }
     IEnumerable<Square> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction);
 }
-public class Board : MonoBehaviour, IBoard, IObservableScore
+public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnChanged
 {
     [SerializeField]
     private Vector2Int size;
@@ -28,11 +28,13 @@ public class Board : MonoBehaviour, IBoard, IObservableScore
 
     private Subject<int> blackScoreSubject = new();
     private Subject<int> whiteScoreSubject = new();
+    private Subject<StoneStatus> turnChangedSubject = new();
 
     public IReadOnlyMatrix<Square> Squares => squareMatrix;
 
     public Observable<int> ObservableBlackScore => blackScoreSubject.AsObservable();
     public Observable<int> ObservableWhiteScore => whiteScoreSubject.AsObservable();
+    public Observable<StoneStatus> ObservableTurnChanged => turnChangedSubject.AsObservable();
 
     public IEnumerable<Square> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction) => squareMatrix.GetDirectionEnumerator(origin, direction);
 
@@ -69,6 +71,8 @@ public class Board : MonoBehaviour, IBoard, IObservableScore
                         square.StoneStatus = s;
                         stoneProvider.Switch();
                         flipper.Put(index, s);
+                        // これも良くない〜〜〜〜
+                        turnChangedSubject.OnNext(s == StoneStatus.Black ? StoneStatus.White : StoneStatus.Black);
                     });
                 // squareの状態が変わったらスコアを更新
                 square.ObservableStoneChanged

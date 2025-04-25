@@ -235,6 +235,7 @@ GameObject:
   - component: {fileID: 496082536}
   - component: {fileID: 496082538}
   - component: {fileID: 496082537}
+  - component: {fileID: 496082539}
   m_Layer: 5
   m_Name: WhiteStoneImage
   m_TagString: Untagged
@@ -299,6 +300,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 496082535}
   m_CullTransparentMesh: 1
+--- !u!114 &496082539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 496082535}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
+  m_EffectDistance: {x: 15, y: 15}
+  m_UseGraphicAlpha: 1
 --- !u!1 &498030924
 GameObject:
   m_ObjectHideFlags: 0
@@ -751,6 +767,7 @@ GameObject:
   - component: {fileID: 760373585}
   - component: {fileID: 760373587}
   - component: {fileID: 760373586}
+  - component: {fileID: 760373588}
   m_Layer: 5
   m_Name: BlackStoneImage
   m_TagString: Untagged
@@ -815,6 +832,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 760373584}
   m_CullTransparentMesh: 1
+--- !u!114 &760373588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 760373584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EffectColor: {r: 1, g: 1, b: 1, a: 1}
+  m_EffectDistance: {x: 15, y: 15}
+  m_UseGraphicAlpha: 1
 --- !u!1 &1003582797
 GameObject:
   m_ObjectHideFlags: 0
@@ -1017,6 +1049,8 @@ GameObject:
   - component: {fileID: 2034741994}
   - component: {fileID: 2034741996}
   - component: {fileID: 2034741995}
+  - component: {fileID: 2034741997}
+  - component: {fileID: 2034741998}
   m_Layer: 5
   m_Name: UI Base Panel
   m_TagString: Untagged
@@ -1083,6 +1117,60 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2034741993}
   m_CullTransparentMesh: 1
+--- !u!114 &2034741997
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2034741993}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2935d31cd494c473a96d7a7aaf46cb39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 1003582798}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: observableScore
+      Entry: 10
+      Data: 0
+  blackText: {fileID: 722495717}
+  whiteText: {fileID: 536875817}
+--- !u!114 &2034741998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2034741993}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83ce43a6ac57147e1b8ce8cc8a249284, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 1003582798}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: observableTurnChanged
+      Entry: 10
+      Data: 0
+  blackOutline: {fileID: 760373588}
+  whiteOutline: {fileID: 496082539}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
