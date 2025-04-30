@@ -16,15 +16,15 @@ public class TurnBlinker : SerializedMonoBehaviour
     private Outline whiteOutline;
 
     private Vector2 defaultValue;
-    private StoneStatus nowTurn = StoneStatus.White; // よくない。StoneProviderとの二重管理になってる
-    private Dictionary<StoneStatus, Outline> stoneStatusOutlineMap;
+    private StoneColor nowTurn = StoneProvider.initialStoneColor;
+    private Dictionary<StoneColor, Outline> stoneStatusOutlineMap;
     void Start()
     {
         // 白黒とそれに該当するOutlineを紐づける
         stoneStatusOutlineMap = new()
         {
-            { StoneStatus.Black, blackOutline },
-            { StoneStatus.White, whiteOutline },
+            { StoneColor.Black, blackOutline },
+            { StoneColor.White, whiteOutline },
         };
 
         // 初期値をインスペクタの値から取得する
@@ -36,11 +36,10 @@ public class TurnBlinker : SerializedMonoBehaviour
         // ターンが変わったら
         observableTurnChanged
             .ObservableTurnChanged
-            .Where(stoneStatus => stoneStatus == StoneStatus.Black || stoneStatus == StoneStatus.White)
-            .Subscribe(stoneStatus =>
+            .Subscribe(color =>
             {
                 stoneStatusOutlineMap[nowTurn].effectDistance = Vector2.zero;
-                nowTurn = stoneStatus;
+                nowTurn = color;
             });
 
         int count = 0;

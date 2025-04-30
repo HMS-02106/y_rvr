@@ -14,13 +14,13 @@ public interface IStoneFlipper {
     /// <param name="matrixIndex">置きたいマスの座標</param>
     /// <param name="stoneStatus">置きたい石の色</param>
     /// <returns></returns>
-    bool Validate(MatrixIndex matrixIndex, StoneStatus stoneStatus);
+    bool Validate(MatrixIndex matrixIndex, StoneColor stoneStatus);
     /// <summary>
     /// 石を置く
     /// </summary>
     /// <param name="matrixIndex">置く場所</param>
     /// <param name="stoneStatus">置く石の色</param>
-    void Put(MatrixIndex matrixIndex, StoneStatus stoneStatus);
+    void Put(MatrixIndex matrixIndex, StoneColor stoneStatus);
 }
 public class StoneFlipper : IStoneFlipper
 {
@@ -31,43 +31,47 @@ public class StoneFlipper : IStoneFlipper
         this.board = board;
     }
 
-    public bool Validate(MatrixIndex matrixIndex, StoneStatus stoneStatus)
+    public bool Validate(MatrixIndex matrixIndex, StoneColor stoneColor)
     {
         // すでに置かれている場所には置けない
-        if (board.Squares.Get(matrixIndex).IsStoneExists) {
+        if (board.Squares.Get(matrixIndex).IsStoneExists)
+        {
             return false;
         }
-        foreach(var stones in GetFlippableStonesPerDirection(matrixIndex, stoneStatus)) {
-            if (stones.Any(stone => stone.Status == stoneStatus)) {
+        foreach (var stones in GetFlippableStonesPerDirection(matrixIndex, stoneColor))
+        {
+            // ひっくり返す対象の石があるか
+            if (stones.Any(stone => stone.Color == stoneColor))
+            {
                 return true;
             }
         }   
         return false;
     }
-    public void Put(MatrixIndex matrixIndex, StoneStatus putStoneStatus)
+    public void Put(MatrixIndex matrixIndex, StoneColor putStoneColor)
     {
         // まず全方向に対して放射状にStoneを取得して
-        GetFlippableStonesPerDirection(matrixIndex, putStoneStatus)
+        GetFlippableStonesPerDirection(matrixIndex, putStoneColor)
             // 同一方向に同じ色のStoneがある場合のみひっくり返す対象
-            .Where(stones => stones.Any(stone => stone.Status == putStoneStatus))
+            .Where(stones => stones.Any(stone => stone.Color == putStoneColor))
             // 同じ色が来るまで繰り返す
-            .Select(stones => stones.TakeUntil(stone => stone.Status == putStoneStatus).ToArray())
+            .Select(stones => stones.TakeUntil(stone => stone.Color == putStoneColor).ToArray())
             .SelectMany(stones => stones)
-            .ForEach(stone => stone.Status = putStoneStatus);
+            .ForEach(stone => stone.Status = putStoneColor.ToStoneStatus());
     }
 
     /// <summary>
     /// 石を置いたときにひっくり返す対象となる石の列を取得する
     /// </summary>
     /// <param name="matrixIndex">石を置く位置</param>
-    /// <param name="stoneStatus">石の色</param>
+    /// <param name="stoneColor">石の色</param>
     /// <returns></returns>
-    private IEnumerable<IEnumerable<Stone>> GetFlippableStonesPerDirection(MatrixIndex matrixIndex, StoneStatus stoneStatus) =>
+    private IEnumerable<IEnumerable<Stone>> GetFlippableStonesPerDirection(MatrixIndex matrixIndex, StoneColor stoneColor) =>
         EnumUtils.All<Direction8>()
             .Where(direction =>
             {
                 // 石を置く位置を起点として、隣に別の色の石がなければならない
-                var isOpposite = (board.Squares.Get(matrixIndex, direction)?.Stone)?.IsOpposite(stoneStatus);
+                var isOpposite = (board.Squares.Get(matrixIndex, direction)?.Stone)?.IsOpposite(stoneColor);
                 return isOpposite.HasValue && isOpposite.Value;
             })
             .Select(direction => board.GetDirectionEnumerable(matrixIndex, direction).Select(sq => sq.Stone));

@@ -3,16 +3,12 @@
 
 public class StoneProvider
 {
-    private bool isBlack = false;
+    public static readonly StoneColor initialStoneColor = StoneColor.White;
+    private bool isBlack = initialStoneColor == StoneColor.Black;
 
-    public Stone GetStone()
+    public StoneColor GetStoneColor()
     {
-        throw new System.NotImplementedException();
-    }
-
-    public StoneStatus GetNextStoneStatus()
-    {
-        return isBlack ? StoneStatus.Black : StoneStatus.White;
+        return isBlack ? StoneColor.Black : StoneColor.White;
     }
 
     public void Switch() => isBlack = !isBlack;
