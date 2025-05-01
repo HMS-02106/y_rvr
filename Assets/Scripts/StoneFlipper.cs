@@ -50,6 +50,10 @@ public class StoneFlipper : IStoneFlipper
     }
     public void Put(MatrixIndex matrixIndex, StoneColor putStoneColor)
     {
+        // indexに指定の色の石を置く
+        board.Squares.Get(matrixIndex).StoneStatus = putStoneColor.ToStoneStatus();
+
+        // 次に、その石を置いたことでひっくり返る石を取得し、色を変える
         // まず全方向に対して放射状にStoneを取得して
         GetFlippableStonesPerDirection(matrixIndex, putStoneColor)
             // 同一方向に同じ色のStoneがある場合のみひっくり返す対象

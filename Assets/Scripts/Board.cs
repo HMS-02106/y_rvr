@@ -70,12 +70,10 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                 square.ObservableClick
                     .Select(_ => stoneProvider.GetCurrentStoneColor())
                     .Where(stoneColor => flipper.Validate(index, stoneColor))
-                    .Subscribe(color =>
+                    .Subscribe(stoneColor =>
                     {
                         // 石を置く
-                        flipper.Put(index, color);
-                        // 石のステータスを変える
-                        square.StoneStatus = color.ToStoneStatus();
+                        flipper.Put(index, stoneColor);
                         // 石を置いたので、次に置く色の色を変える
                         var nextColor = stoneProvider.Switch();
                         // ターンが変わったことを通知する
