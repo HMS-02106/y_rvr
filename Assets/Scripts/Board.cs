@@ -47,6 +47,7 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
         EnumerableFactory
             .FromVector2Int(size)
             .ForEach(coord => {
+                // マス目を順に生成
                 Square square = Instantiate(originalSquare, transform);
                 var squareSize = square.SpriteSize;
                 square.transform.position = new Vector2(coord.x * squareSize.x, coord.y * squareSize.y);
@@ -56,19 +57,18 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                 // NOTE: これStoneProviderから提供してもらって、Select(_ => StoneProvider.Provide)でStoneを受け取り、それをValidateすべきだよなあ
 
                 // マスにマウスが乗ったら、石の色を取得してValidateし、OKならBorderを変える
-                square
-                    .ObservableEnter
-                    .Select(_ => stoneProvider.GetStoneColor())
+                square.ObservableEnter
+                    .Select(_ => stoneProvider.GetCurrentStoneColor())
                     .Where(stoneColor => flipper.Validate(index, stoneColor))
                     .Subscribe(_ => square.BorderStatus = BorderStatus.Selected);
+
                 // マスからマウスが離れたら、Borderを元に戻す
-                square
-                    .ObservableExit
+                square.ObservableExit
                     .Subscribe(_ => square.BorderStatus = BorderStatus.None);
+
                 // マスをクリックしたら、石の色を取得してValidateし、OKなら石を置く
-                square
-                    .ObservableClick
-                    .Select(_ => stoneProvider.GetStoneColor())
+                square.ObservableClick
+                    .Select(_ => stoneProvider.GetCurrentStoneColor())
                     .Where(stoneColor => flipper.Validate(index, stoneColor))
                     .Subscribe(color =>
                     {
@@ -77,13 +77,13 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                         // 石のステータスを変える
                         square.StoneStatus = color.ToStoneStatus();
                         // 石を置いたので、次に置く色の色を変える
-                        stoneProvider.Switch();
+                        var nextColor = stoneProvider.Switch();
                         // ターンが変わったことを通知する
-                        turnChangedSubject.OnNext(color);
+                        turnChangedSubject.OnNext(nextColor);
                     });
+
                 // squareの状態が変わったらスコアを更新
-                square
-                    .ObservableStoneChanged
+                square.ObservableStoneChanged
                     .Subscribe(_ =>
                     {
                         int black = 0, white = 0;

@@ -6,10 +6,21 @@ public class StoneProvider
     public static readonly StoneColor initialStoneColor = StoneColor.White;
     private bool isBlack = initialStoneColor == StoneColor.Black;
 
-    public StoneColor GetStoneColor()
+    /// <summary>
+    /// 現在の石の色を取得する
+    /// </summary>
+    /// <returns></returns>
+    public StoneColor GetCurrentStoneColor() => StoneColor;
+
+    /// <summary>
+    /// 石を入れ替える
+    /// </summary>
+    /// <returns>入れ替え後の石の色</returns>
+    public StoneColor Switch()
     {
-        return isBlack ? StoneColor.Black : StoneColor.White;
+        isBlack = !isBlack;
+        return StoneColor;
     }
 
-    public void Switch() => isBlack = !isBlack;
+    private StoneColor StoneColor => isBlack ? StoneColor.Black : StoneColor.White;
 }
