@@ -1,10 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using R3;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityUtility.Collections;
 using UnityUtility.Extensions;
 
 /// <summary>
@@ -36,10 +32,8 @@ public class Square : MouseHandleableMonoBehaviour // マウスを検知した�
         get => border.Status;
         set => border.Status = value;
     }
+    public StoneColor? StoneColor => stone.Color;
 
     public bool IsBlack => StoneStatus == StoneStatus.Black;
     public bool IsWhite => StoneStatus == StoneStatus.White;
-    
-    // 仮置き、後で消す
-    public Stone Stone => stone;
 }
