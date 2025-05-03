@@ -1,19 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
+using R3;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityUtility.Collections;
 using UnityUtility.Extensions;
-
-public interface ISquare {
-    IStone Stone { get; }
-}
 
 /// <summary>
 /// リバーシ盤面のマス
 /// </summary>
-public class Square : MouseHandleableMonoBehaviour, ISquare // マウスを検知したらBoardにValidateを依頼するだけ。Squareが自発的にStoneを置いたりBoarderを変えたりしない。
+public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier // マウスを検知したらBoardにValidateを依頼するだけ。Squareが自発的にStoneを置いたりBoarderを変えたりしない。
 {
     [SerializeField]
     private SpriteRenderer spriteRenderer;
@@ -26,14 +19,24 @@ public class Square : MouseHandleableMonoBehaviour, ISquare // マウスを検�
     public TextMeshPro debugText;
 
     public Vector2 SpriteSize => spriteRenderer.bounds.size.DisZ();
-    public IStone Stone => stone;
+    public bool IsStoneExists => stone.IsExist;
+    public Observable<R3.Unit> ObservableStoneChanged => stone.ObservableStatusChanged;
 
-    public StoneStatus StoneStatus { 
+    public StoneStatus StoneStatus
+    {
         get => stone.Status;
         set => stone.Status = value;
     }
-    public BorderStatus BorderStatus {
+    public BorderStatus BorderStatus
+    {
         get => border.Status;
         set => border.Status = value;
     }
+    public StoneColor? StoneColor => stone.Color;
+
+    public bool IsBlack => StoneStatus == StoneStatus.Black;
+    public bool IsWhite => StoneStatus == StoneStatus.White;
+
+    public Observable<int> ObservableBlackStoneCount => stone.ObservableBlackStoneCount;
+    public Observable<int> ObservableWhiteStoneCount => stone.ObservableWhiteStoneCount;
 }

@@ -14,13 +14,13 @@ public interface IStoneFlipper {
     /// <param name="matrixIndex">置きたいマスの座標</param>
     /// <param name="stoneStatus">置きたい石の色</param>
     /// <returns></returns>
-    bool Validate(MatrixIndex matrixIndex, StoneStatus stoneStatus);
+    bool Validate(MatrixIndex matrixIndex, StoneColor stoneStatus);
     /// <summary>
     /// 石を置く
     /// </summary>
     /// <param name="matrixIndex">置く場所</param>
     /// <param name="stoneStatus">置く石の色</param>
-    void Put(MatrixIndex matrixIndex, StoneStatus stoneStatus);
+    void Put(MatrixIndex matrixIndex, StoneColor stoneStatus);
 }
 public class StoneFlipper : IStoneFlipper
 {
@@ -31,44 +31,49 @@ public class StoneFlipper : IStoneFlipper
         this.board = board;
     }
 
-    public bool Validate(MatrixIndex matrixIndex, StoneStatus stoneStatus)
+    public bool Validate(MatrixIndex matrixIndex, StoneColor stoneColor)
     {
         // すでに置かれている場所には置けない
-        if (board.Squares.Get(matrixIndex).Stone.IsExist) {
+        if (board.Squares.Get(matrixIndex).IsStoneExists)
+        {
             return false;
         }
-        foreach(var stones in GetFlippableStonesPerDirection(matrixIndex, stoneStatus)) {
-            if (stones.Any(stone => stone.Status == stoneStatus)) {
-                return true;
-            }
-        }   
-        return false;
+        // 石を置いた場合に、少なくとも1方向にひっくり返すことができるか
+        return GetFlippableSquareSequencesPerDirection(matrixIndex, stoneColor).Count() > 0;
     }
-    public void Put(MatrixIndex matrixIndex, StoneStatus putStoneStatus)
+    public void Put(MatrixIndex matrixIndex, StoneColor putStoneColor)
     {
-        // まず全方向に対して放射状にStoneを取得して
-        GetFlippableStonesPerDirection(matrixIndex, putStoneStatus)
-            // 同一方向に同じ色のStoneがある場合のみひっくり返す対象
-            .Where(stones => stones.Any(stone => stone.Status == putStoneStatus))
+        // indexに指定の色の石を置く
+        board.Squares.Get(matrixIndex).StoneStatus = putStoneColor.ToStoneStatus();
+
+        // 次に、その石を置いたことでひっくり返る石を取得し、色を変える
+        // まず、ひっくり返す対象となるマスの列を取得する
+        GetFlippableSquareSequencesPerDirection(matrixIndex, putStoneColor)
             // 同じ色が来るまで繰り返す
-            .Select(stones => stones.TakeUntil(stone => stone.Status == putStoneStatus).ToArray())
-            .SelectMany(stones => stones)
-            .ForEach(stone => stone.Status = putStoneStatus);
+            .Select(squareSq => squareSq.TakeUntil(square => square.StoneColor == putStoneColor).ToArray())
+            .SelectMany(squares => squares)
+            // 色を変える
+            .ForEach(square => square.StoneStatus = putStoneColor.ToStoneStatus());
     }
 
     /// <summary>
-    /// 石を置いたときにひっくり返す対象となる石の列を取得する
+    /// 石を置いたときにひっくり返す対象となるマスの列を取得する
     /// </summary>
     /// <param name="matrixIndex">石を置く位置</param>
-    /// <param name="stoneStatus">石の色</param>
+    /// <param name="stoneColor">石の色</param>
     /// <returns></returns>
-    private IEnumerable<IEnumerable<IStone>> GetFlippableStonesPerDirection(MatrixIndex matrixIndex, StoneStatus stoneStatus) =>
+    private IEnumerable<SquareSequence> GetFlippableSquareSequencesPerDirection(MatrixIndex matrixIndex, StoneColor stoneColor) =>
         EnumUtils.All<Direction8>()
+            // 置くマスの隣に石があり、かつその石の色が異なる方向に絞る
             .Where(direction =>
             {
-                // 石を置く位置を起点として、隣に別の色の石がなければならない
-                var isOpposite = (board.Squares.Get(matrixIndex, direction)?.Stone)?.IsOpposite(stoneStatus);
-                return isOpposite.HasValue && isOpposite.Value;
+                // 隣のマスの石の色を取得する
+                var adjacentStoneColor = board.Squares.Get(matrixIndex, direction)?.StoneColor;
+                // 隣のマスに石があり、かつその色が異なる場合
+                return adjacentStoneColor != null && adjacentStoneColor != stoneColor;
             })
-            .Select(direction => board.GetDirectionEnumerable(matrixIndex, direction).Select(sq => sq.Stone));
+            // その方向にあるマスを全て取得する
+            .Select(direction => board.GetDirectionSquareSequence(matrixIndex, direction))
+            // その方向のマスに同じ色が含まれれば、そこまでひっくり返すことができる
+            .Where(squareSq => squareSq.ContainsColor(stoneColor));
 }

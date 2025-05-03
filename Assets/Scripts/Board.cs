@@ -14,10 +14,10 @@ using System.IO;
 using System;
 
 public interface IBoard {
-    IReadOnlyMatrix<ISquare> Squares { get; }
-    IEnumerable<ISquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction);
+    IReadOnlyMatrix<Square> Squares { get; }
+    SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction);
 }
-public class Board : MonoBehaviour, IBoard
+public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnChanged
 {
     [SerializeField]
     private Vector2Int size;
@@ -25,48 +25,67 @@ public class Board : MonoBehaviour, IBoard
     private Square originalSquare;
 
     private Matrix<Square> squareMatrix;
+    private ScoreManager scoreManager;
+    private Subject<StoneColor> turnChangedSubject = new();
 
-    public IReadOnlyMatrix<ISquare> Squares => squareMatrix;
-    public IEnumerable<ISquare> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction) => squareMatrix.GetDirectionEnumerator(origin, direction);
+    public IReadOnlyMatrix<Square> Squares => squareMatrix;
+
+    public Observable<StoneColor> ObservableTurnChanged => turnChangedSubject.AsObservable();
+
+    public Observable<int> ObservableBlackScore => scoreManager.ObservableBlackScore;
+    public Observable<int> ObservableWhiteScore => scoreManager.ObservableWhiteScore;
+
+    public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new SquareSequence(squareMatrix.GetDirectionEnumerable(origin, direction).ToList());
 
     void Start() {
         squareMatrix = new Matrix<Square>(size.y, size.x);
 
-        IStoneFlipper flipper = new StoneFlipper(this);
-        IStoneProvider stoneProvider = new StoneProvider();
+        StoneFlipper flipper = new StoneFlipper(this);
+        StoneProvider stoneProvider = new StoneProvider();
 
         EnumerableFactory
             .FromVector2Int(size)
             .ForEach(coord => {
+                // マス目を順に生成
                 Square square = Instantiate(originalSquare, transform);
                 var squareSize = square.SpriteSize;
                 square.transform.position = new Vector2(coord.x * squareSize.x, coord.y * squareSize.y);
                 square.debugText.text = coord.ToString();
 
                 MatrixIndex index = new MatrixIndex(coord.y, coord.x);
-                //これStoneProviderから提供してもらって、Select(_ => StoneProvider.Provide)でStoneを受け取り、それをValidateすべきだよなあ
-                square
-                    .ObservableEnter
-                    .Select(_ => stoneProvider.GetNextStoneStatus())
-                    .Where(stoneStatus => flipper.Validate(index, stoneStatus))
+                // NOTE: これStoneProviderから提供してもらって、Select(_ => StoneProvider.Provide)でStoneを受け取り、それをValidateすべきだよなあ
+
+                // マスにマウスが乗ったら、石の色を取得してValidateし、OKならBorderを変える
+                square.ObservableEnter
+                    .Select(_ => stoneProvider.GetCurrentStoneColor())
+                    .Where(stoneColor => flipper.Validate(index, stoneColor))
                     .Subscribe(_ => square.BorderStatus = BorderStatus.Selected);
-                square
-                    .ObservableExit
+
+                // マスからマウスが離れたら、Borderを元に戻す
+                square.ObservableExit
                     .Subscribe(_ => square.BorderStatus = BorderStatus.None);
-                square
-                    .ObservableClick
-                    .Select(_ => stoneProvider.GetNextStoneStatus())
-                    .Where(stoneStatus => flipper.Validate(index, stoneStatus))
-                    .Subscribe(s =>
+
+                // マスをクリックしたら、石の色を取得してValidateし、OKなら石を置く
+                square.ObservableClick
+                    .Select(_ => stoneProvider.GetCurrentStoneColor())
+                    .Where(stoneColor => flipper.Validate(index, stoneColor))
+                    .Subscribe(stoneColor =>
                     {
-                        square.Stone.Status = s;
-                        stoneProvider.Switch();
-                        flipper.Put(index, s);
+                        // 石を置く
+                        flipper.Put(index, stoneColor);
+                        // 石を置いたので、次に置く色の色を変える
+                        var nextColor = stoneProvider.Switch();
+                        // ターンが変わったことを通知する
+                        turnChangedSubject.OnNext(nextColor);
                     });
 
                 // 行列にセット
                 squareMatrix.Set(square, index);
             });
+
+        // スコアを管理する
+        scoreManager = new ScoreManager(squareMatrix);
+        
         // 中心に持ってくる
         this.transform.position = new Vector2(
             this.transform.position.x - originalSquare.SpriteSize.x * (size.x - 1) / 2,
@@ -80,5 +99,20 @@ public class Board : MonoBehaviour, IBoard
         squareMatrix.Get(size.x / 2 - 1, size.y / 2).StoneStatus = StoneStatus.Black;
     }
 
-    
+    private class ScoreManager : IObservableScore
+    {
+        private ReactiveProperty<int> blackScoreSubject = new(0);
+        private ReactiveProperty<int> whiteScoreSubject = new(0);
+        public Observable<int> ObservableBlackScore => blackScoreSubject.AsObservable();
+        public Observable<int> ObservableWhiteScore => whiteScoreSubject.AsObservable();
+
+        public ScoreManager(IEnumerable<IColorCountChangeNotifier> colorCountChangeNotifiers)
+        {
+            foreach (var notifier in colorCountChangeNotifiers)
+            {
+                notifier.ObservableBlackStoneCount.Subscribe(count => blackScoreSubject.Value += count);
+                notifier.ObservableWhiteStoneCount.Subscribe(count => whiteScoreSubject.Value += count);
+            }
+        }
+    }
 }

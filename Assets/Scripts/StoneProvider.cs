@@ -1,24 +1,26 @@
 // 今からおこうとしているStoneを提供する
 
 
-public interface IStoneProvider {
-    Stone GetStone();
-    StoneStatus GetNextStoneStatus();
-    void Switch();
-}
-public class StoneProvider : IStoneProvider
+public class StoneProvider
 {
-    private bool isBlack = false;
+    public static readonly StoneColor initialStoneColor = StoneColor.White;
+    private bool isBlack = initialStoneColor == StoneColor.Black;
 
-    public Stone GetStone()
+    /// <summary>
+    /// 現在の石の色を取得する
+    /// </summary>
+    /// <returns></returns>
+    public StoneColor GetCurrentStoneColor() => StoneColor;
+
+    /// <summary>
+    /// 石を入れ替える
+    /// </summary>
+    /// <returns>入れ替え後の石の色</returns>
+    public StoneColor Switch()
     {
-        throw new System.NotImplementedException();
+        isBlack = !isBlack;
+        return StoneColor;
     }
 
-    public StoneStatus GetNextStoneStatus()
-    {
-        return isBlack ? StoneStatus.Black : StoneStatus.White;
-    }
-
-    public void Switch() => isBlack = !isBlack;
+    private StoneColor StoneColor => isBlack ? StoneColor.Black : StoneColor.White;
 }
