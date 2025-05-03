@@ -25,16 +25,15 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
     private Square originalSquare;
 
     private Matrix<Square> squareMatrix;
-
-    private Subject<int> blackScoreSubject = new();
-    private Subject<int> whiteScoreSubject = new();
+    private ScoreManager scoreManager;
     private Subject<StoneColor> turnChangedSubject = new();
 
     public IReadOnlyMatrix<Square> Squares => squareMatrix;
 
-    public Observable<int> ObservableBlackScore => blackScoreSubject.AsObservable();
-    public Observable<int> ObservableWhiteScore => whiteScoreSubject.AsObservable();
     public Observable<StoneColor> ObservableTurnChanged => turnChangedSubject.AsObservable();
+
+    public Observable<int> ObservableBlackScore => scoreManager.ObservableBlackScore;
+    public Observable<int> ObservableWhiteScore => scoreManager.ObservableWhiteScore;
 
     public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new SquareSequence(squareMatrix.GetDirectionEnumerable(origin, direction).ToList());
 
@@ -80,29 +79,13 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                         turnChangedSubject.OnNext(nextColor);
                     });
 
-                // squareの状態が変わったらスコアを更新
-                square.ObservableStoneChanged
-                    .Subscribe(_ =>
-                    {
-                        int black = 0, white = 0;
-                        foreach (var square in squareMatrix)
-                        {
-                            if (square.IsBlack)
-                            {
-                                black++;
-                            }
-                            else if (square.IsWhite)
-                            {
-                                white++;
-                            }
-                        }
-                        blackScoreSubject.OnNext(black);
-                        whiteScoreSubject.OnNext(white);
-                    });
                 // 行列にセット
                 squareMatrix.Set(square, index);
             });
-            
+
+        // スコアを管理する
+        scoreManager = new ScoreManager(squareMatrix);
+        
         // 中心に持ってくる
         this.transform.position = new Vector2(
             this.transform.position.x - originalSquare.SpriteSize.x * (size.x - 1) / 2,
@@ -116,5 +99,20 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
         squareMatrix.Get(size.x / 2 - 1, size.y / 2).StoneStatus = StoneStatus.Black;
     }
 
-    
+    private class ScoreManager : IObservableScore
+    {
+        private ReactiveProperty<int> blackScoreSubject = new(0);
+        private ReactiveProperty<int> whiteScoreSubject = new(0);
+        public Observable<int> ObservableBlackScore => blackScoreSubject.AsObservable();
+        public Observable<int> ObservableWhiteScore => whiteScoreSubject.AsObservable();
+
+        public ScoreManager(IEnumerable<IColorCountChangeNotifier> colorCountChangeNotifiers)
+        {
+            foreach (var notifier in colorCountChangeNotifiers)
+            {
+                notifier.ObservableBlackStoneCount.Subscribe(count => blackScoreSubject.Value += count);
+                notifier.ObservableWhiteStoneCount.Subscribe(count => whiteScoreSubject.Value += count);
+            }
+        }
+    }
 }

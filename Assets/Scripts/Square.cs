@@ -6,7 +6,7 @@ using UnityUtility.Extensions;
 /// <summary>
 /// リバーシ盤面のマス
 /// </summary>
-public class Square : MouseHandleableMonoBehaviour // マウスを検知したらBoardにValidateを依頼するだけ。Squareが自発的にStoneを置いたりBoarderを変えたりしない。
+public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier // マウスを検知したらBoardにValidateを依頼するだけ。Squareが自発的にStoneを置いたりBoarderを変えたりしない。
 {
     [SerializeField]
     private SpriteRenderer spriteRenderer;
@@ -36,4 +36,7 @@ public class Square : MouseHandleableMonoBehaviour // マウスを検知した�
 
     public bool IsBlack => StoneStatus == StoneStatus.Black;
     public bool IsWhite => StoneStatus == StoneStatus.White;
+
+    public Observable<int> ObservableBlackStoneCount => stone.ObservableBlackStoneCount;
+    public Observable<int> ObservableWhiteStoneCount => stone.ObservableWhiteStoneCount;
 }
