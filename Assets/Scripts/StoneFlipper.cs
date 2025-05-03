@@ -50,7 +50,7 @@ public class StoneFlipper : IStoneFlipper
         // まず全方向に対して放射状にStoneを取得して
         GetFlippableSquareSequencesPerDirection(matrixIndex, putStoneColor)
             // 同じ色が来るまで繰り返す
-            .Select(squareSq => squareSq.TakeUntil(square => square.StoneColor == putStoneColor).ToArray())
+            .Select(squareSq => squareSq.TakeUntil(square => square.StoneColor == putStoneColor))
             .SelectMany(squares => squares)
             .ForEach(square => square.StoneStatus = putStoneColor.ToStoneStatus());
     }
