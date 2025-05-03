@@ -36,7 +36,7 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
     public Observable<int> ObservableWhiteScore => whiteScoreSubject.AsObservable();
     public Observable<StoneColor> ObservableTurnChanged => turnChangedSubject.AsObservable();
 
-    public IEnumerable<Square> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction) => squareMatrix.GetDirectionEnumerator(origin, direction);
+    public IEnumerable<Square> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction) => squareMatrix.GetDirectionEnumerable(origin, direction);
 
     void Start() {
         squareMatrix = new Matrix<Square>(size.y, size.x);
