@@ -15,7 +15,7 @@ using System;
 
 public interface IBoard {
     IReadOnlyMatrix<Square> Squares { get; }
-    IEnumerable<Square> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction);
+    SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction);
 }
 public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnChanged
 {
@@ -36,7 +36,7 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
     public Observable<int> ObservableWhiteScore => whiteScoreSubject.AsObservable();
     public Observable<StoneColor> ObservableTurnChanged => turnChangedSubject.AsObservable();
 
-    public IEnumerable<Square> GetDirectionEnumerable(MatrixIndex origin, Direction8 direction) => squareMatrix.GetDirectionEnumerable(origin, direction);
+    public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new SquareSequence(squareMatrix.GetDirectionEnumerable(origin, direction).ToList());
 
     void Start() {
         squareMatrix = new Matrix<Square>(size.y, size.x);
