@@ -58,12 +58,13 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                 // マスにマウスが乗ったら、石の色を取得してValidateし、OKならBorderを変える
                 square.ObservableEnter
                     .Select(_ => stoneProvider.GetCurrentStoneColor())
-                    .Where(stoneColor => flipper.Validate(index, stoneColor))
-                    .Subscribe(_ => square.BorderStatus = BorderStatus.Selected);
-
-                // マスからマウスが離れたら、Borderを元に戻す
-                square.ObservableExit
-                    .Subscribe(_ => square.BorderStatus = BorderStatus.None);
+                    .Select(stoneColor => flipper.GetFlippableSquareSequencesPerDirection(index, stoneColor))
+                    .SubscribeAwait(async (sq, ct) =>
+                    {
+                        sq.ForEach(sq => sq.BorderStatus = BorderStatus.Selected);
+                        await square.ObservableExit.FirstAsync();
+                        sq.ForEach(sq => sq.BorderStatus = BorderStatus.None);
+                    });
 
                 // マスをクリックしたら、石の色を取得してValidateし、OKなら石を置く
                 square.ObservableClick

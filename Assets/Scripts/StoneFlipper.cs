@@ -50,8 +50,7 @@ public class StoneFlipper : IStoneFlipper
         // まず、ひっくり返す対象となるマスの列を取得する
         GetFlippableSquareSequencesPerDirection(matrixIndex, putStoneColor)
             // 同じ色が来るまで繰り返す
-            .Select(squareSq => squareSq.TakeUntil(square => square.StoneColor == putStoneColor).ToArray())
-            .SelectMany(squares => squares)
+            
             // 色を変える
             .ForEach(square => square.StoneStatus = putStoneColor.ToStoneStatus());
     }
@@ -62,7 +61,7 @@ public class StoneFlipper : IStoneFlipper
     /// <param name="matrixIndex">石を置く位置</param>
     /// <param name="stoneColor">石の色</param>
     /// <returns></returns>
-    private IEnumerable<SquareSequence> GetFlippableSquareSequencesPerDirection(MatrixIndex matrixIndex, StoneColor stoneColor) =>
+    public IEnumerable<Square> GetFlippableSquareSequencesPerDirection(MatrixIndex matrixIndex, StoneColor stoneColor) =>
         EnumUtils.All<Direction8>()
             // 置くマスの隣に石があり、かつその石の色が異なる方向に絞る
             .Where(direction =>
@@ -75,5 +74,6 @@ public class StoneFlipper : IStoneFlipper
             // その方向にあるマスを全て取得する
             .Select(direction => board.GetDirectionSquareSequence(matrixIndex, direction))
             // その方向のマスに同じ色が含まれれば、そこまでひっくり返すことができる
-            .Where(squareSq => squareSq.ContainsColor(stoneColor));
+            .Where(squareSq => squareSq.ContainsColor(stoneColor))
+            .SelectMany(squareSq => squareSq.TakeUntil(sq => sq.StoneColor == stoneColor));
 }
