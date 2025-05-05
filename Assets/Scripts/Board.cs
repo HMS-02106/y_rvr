@@ -1,17 +1,11 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Sirenix.Utilities;
 using UnityEngine;
 using UnityUtility.Linq;
 using UnityUtility.Collections;
-using Sirenix.OdinInspector.Editor.Examples;
 using UnityUtility.Enums;
-using Sirenix.Reflection.Editor;
 using R3;
-using Unity.Mathematics;
-using System.IO;
-using System;
+using MoreLinq.Extensions;
 
 public interface IBoard {
     IReadOnlyMatrix<Square> Squares { get; }
@@ -35,7 +29,10 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
     public Observable<int> ObservableBlackScore => scoreManager.ObservableBlackScore;
     public Observable<int> ObservableWhiteScore => scoreManager.ObservableWhiteScore;
 
-    public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new SquareSequence(squareMatrix.GetDirectionEnumerable(origin, direction).ToList());
+    public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new SquareSequence(
+        squareMatrix.GetDirectionEnumerable(origin, direction)
+            .TakeWhile(square => square.IsStoneExists)
+            .ToList());
 
     void Start() {
         squareMatrix = new Matrix<Square>(size.y, size.x);
