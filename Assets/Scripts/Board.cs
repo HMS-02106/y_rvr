@@ -59,21 +59,22 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                 square.ObservableEnter
                     .Select(_ => stoneProvider.GetCurrentStoneColor())
                     .Select(stoneColor => flipper.GetFlippableSquareSequencesPerDirection(index, stoneColor))
+                    .Where(sq => sq.Count() > 0)
                     .SubscribeAwait(async (sq, ct) =>
                     {
-                        sq.ForEach(sq => sq.BorderStatus = BorderStatus.Selected);
+                        square.BorderStatus = BorderStatus.Selected;
+                        sq.ForEach(sq => sq.BorderStatus = BorderStatus.Predicted);
                         await square.ObservableExit.FirstAsync();
+                        square.BorderStatus = BorderStatus.None;
                         sq.ForEach(sq => sq.BorderStatus = BorderStatus.None);
                     });
 
-                // マスをクリックしたら、石の色を取得してValidateし、OKなら石を置く
+                // マスをクリックしたら、石の色を取得してひっくり返る石を取得し、OKなら石を置く
                 square.ObservableClick
                     .Select(_ => stoneProvider.GetCurrentStoneColor())
-                    .Where(stoneColor => flipper.Validate(index, stoneColor))
+                    .Where(stoneColor => flipper.Put(index, stoneColor))
                     .Subscribe(stoneColor =>
                     {
-                        // 石を置く
-                        flipper.Put(index, stoneColor);
                         // 石を置いたので、次に置く色の色を変える
                         var nextColor = stoneProvider.Switch();
                         // ターンが変わったことを通知する
@@ -83,6 +84,9 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                 // 行列にセット
                 squareMatrix.Set(square, index);
             });
+
+        // ターンが変わったら、全てのマスのBorderをリセット
+        ObservableTurnChanged.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None));
 
         // スコアを管理する
         scoreManager = new ScoreManager(squareMatrix);

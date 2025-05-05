@@ -7,6 +7,7 @@ public class SquareBorder : MonoBehaviour
     private Dictionary<BorderStatus, Color> borderColors = new Dictionary<BorderStatus, Color>() {
         { BorderStatus.None, Color.clear },
         { BorderStatus.Selected, Color.white },
+        { BorderStatus.Predicted, Color.magenta },
         { BorderStatus.Pressed, Color.yellow },
     };
 
@@ -30,5 +31,6 @@ public class SquareBorder : MonoBehaviour
 public enum BorderStatus {
     None,
     Selected,
+    Predicted,
     Pressed,
 }
