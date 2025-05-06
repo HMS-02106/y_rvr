@@ -1,17 +1,11 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Sirenix.Utilities;
 using UnityEngine;
 using UnityUtility.Linq;
 using UnityUtility.Collections;
-using Sirenix.OdinInspector.Editor.Examples;
 using UnityUtility.Enums;
-using Sirenix.Reflection.Editor;
 using R3;
-using Unity.Mathematics;
-using System.IO;
-using System;
+using MoreLinq.Extensions;
 
 public interface IBoard {
     IReadOnlyMatrix<Square> Squares { get; }
@@ -35,7 +29,10 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
     public Observable<int> ObservableBlackScore => scoreManager.ObservableBlackScore;
     public Observable<int> ObservableWhiteScore => scoreManager.ObservableWhiteScore;
 
-    public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new SquareSequence(squareMatrix.GetDirectionEnumerable(origin, direction).ToList());
+    public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new SquareSequence(
+        squareMatrix.GetDirectionEnumerable(origin, direction)
+            .TakeWhile(square => square.IsStoneExists)
+            .ToList());
 
     void Start() {
         squareMatrix = new Matrix<Square>(size.y, size.x);
@@ -58,21 +55,23 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                 // マスにマウスが乗ったら、石の色を取得してValidateし、OKならBorderを変える
                 square.ObservableEnter
                     .Select(_ => stoneProvider.GetCurrentStoneColor())
-                    .Where(stoneColor => flipper.Validate(index, stoneColor))
-                    .Subscribe(_ => square.BorderStatus = BorderStatus.Selected);
+                    .Select(stoneColor => flipper.GetFlippableSquareSequencesPerDirection(index, stoneColor))
+                    .Where(sq => sq.Count() > 0)
+                    .SubscribeAwait(async (sq, ct) =>
+                    {
+                        square.BorderStatus = BorderStatus.Selected;
+                        sq.ForEach(sq => sq.BorderStatus = BorderStatus.Predicted);
+                        await square.ObservableExit.FirstAsync();
+                        square.BorderStatus = BorderStatus.None;
+                        sq.ForEach(sq => sq.BorderStatus = BorderStatus.None);
+                    });
 
-                // マスからマウスが離れたら、Borderを元に戻す
-                square.ObservableExit
-                    .Subscribe(_ => square.BorderStatus = BorderStatus.None);
-
-                // マスをクリックしたら、石の色を取得してValidateし、OKなら石を置く
+                // マスをクリックしたら、石の色を取得してひっくり返る石を取得し、OKなら石を置く
                 square.ObservableClick
                     .Select(_ => stoneProvider.GetCurrentStoneColor())
-                    .Where(stoneColor => flipper.Validate(index, stoneColor))
+                    .Where(stoneColor => flipper.Put(index, stoneColor))
                     .Subscribe(stoneColor =>
                     {
-                        // 石を置く
-                        flipper.Put(index, stoneColor);
                         // 石を置いたので、次に置く色の色を変える
                         var nextColor = stoneProvider.Switch();
                         // ターンが変わったことを通知する
@@ -82,6 +81,9 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                 // 行列にセット
                 squareMatrix.Set(square, index);
             });
+
+        // ターンが変わったら、全てのマスのBorderをリセット
+        ObservableTurnChanged.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None));
 
         // スコアを管理する
         scoreManager = new ScoreManager(squareMatrix);

@@ -7,22 +7,7 @@ using UnityUtility.Enums;
 using UnityUtility.Linq;
 using MoreLinq.Extensions;
 
-public interface IStoneFlipper {
-    /// <summary>
-    /// マスに石を置けるか判定する
-    /// </summary>
-    /// <param name="matrixIndex">置きたいマスの座標</param>
-    /// <param name="stoneStatus">置きたい石の色</param>
-    /// <returns></returns>
-    bool Validate(MatrixIndex matrixIndex, StoneColor stoneStatus);
-    /// <summary>
-    /// 石を置く
-    /// </summary>
-    /// <param name="matrixIndex">置く場所</param>
-    /// <param name="stoneStatus">置く石の色</param>
-    void Put(MatrixIndex matrixIndex, StoneColor stoneStatus);
-}
-public class StoneFlipper : IStoneFlipper
+public class StoneFlipper
 {
     private IBoard board;
 
@@ -31,29 +16,27 @@ public class StoneFlipper : IStoneFlipper
         this.board = board;
     }
 
-    public bool Validate(MatrixIndex matrixIndex, StoneColor stoneColor)
+    /// <summary>
+    /// 石を置く
+    /// </summary>
+    /// <param name="matrixIndex">置く場所</param>
+    /// <param name="stoneStatus">置く石の色</param>
+    /// <returns>石を置くことができたかどうか</returns>
+    public bool Put(MatrixIndex matrixIndex, StoneColor putStoneColor)
     {
-        // すでに置かれている場所には置けない
-        if (board.Squares.Get(matrixIndex).IsStoneExists)
+        // ここに石を置いたことでひっくり返る石を取得する
+        var flippableSquares = GetFlippableSquareSequencesPerDirection(matrixIndex, putStoneColor).ToList();
+        if (flippableSquares.Count == 0)
         {
+            // ひっくり返すことができない場合は何もしない
             return false;
         }
-        // 石を置いた場合に、少なくとも1方向にひっくり返すことができるか
-        return GetFlippableSquareSequencesPerDirection(matrixIndex, stoneColor).Count() > 0;
-    }
-    public void Put(MatrixIndex matrixIndex, StoneColor putStoneColor)
-    {
+
         // indexに指定の色の石を置く
         board.Squares.Get(matrixIndex).StoneStatus = putStoneColor.ToStoneStatus();
-
-        // 次に、その石を置いたことでひっくり返る石を取得し、色を変える
-        // まず、ひっくり返す対象となるマスの列を取得する
-        GetFlippableSquareSequencesPerDirection(matrixIndex, putStoneColor)
-            // 同じ色が来るまで繰り返す
-            .Select(squareSq => squareSq.TakeUntil(square => square.StoneColor == putStoneColor).ToArray())
-            .SelectMany(squares => squares)
-            // 色を変える
-            .ForEach(square => square.StoneStatus = putStoneColor.ToStoneStatus());
+        // 色を変える
+        flippableSquares.ForEach(square => square.StoneStatus = putStoneColor.ToStoneStatus());
+        return true;
     }
 
     /// <summary>
@@ -62,8 +45,14 @@ public class StoneFlipper : IStoneFlipper
     /// <param name="matrixIndex">石を置く位置</param>
     /// <param name="stoneColor">石の色</param>
     /// <returns></returns>
-    private IEnumerable<SquareSequence> GetFlippableSquareSequencesPerDirection(MatrixIndex matrixIndex, StoneColor stoneColor) =>
-        EnumUtils.All<Direction8>()
+    public IEnumerable<Square> GetFlippableSquareSequencesPerDirection(MatrixIndex matrixIndex, StoneColor stoneColor)
+    {
+        // すでに置かれている場所には置けない
+        if (board.Squares.Get(matrixIndex).IsStoneExists)
+        {
+            return Enumerable.Empty<Square>();
+        }
+        return EnumUtils.All<Direction8>()
             // 置くマスの隣に石があり、かつその石の色が異なる方向に絞る
             .Where(direction =>
             {
@@ -75,5 +64,7 @@ public class StoneFlipper : IStoneFlipper
             // その方向にあるマスを全て取得する
             .Select(direction => board.GetDirectionSquareSequence(matrixIndex, direction))
             // その方向のマスに同じ色が含まれれば、そこまでひっくり返すことができる
-            .Where(squareSq => squareSq.ContainsColor(stoneColor));
+            .Where(squareSq => squareSq.ContainsColor(stoneColor))
+            .SelectMany(squareSq => squareSq.TakeUntil(sq => sq.StoneColor == stoneColor));
+    }
 }
