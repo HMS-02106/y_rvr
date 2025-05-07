@@ -1760,6 +1760,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8012838e6f5ac4c6daaa24997235ad6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  widthTextField: {fileID: 1244460458}
+  heightTextField: {fileID: 983772354}
 --- !u!1 &1854510070
 GameObject:
   m_ObjectHideFlags: 0
@@ -2011,6 +2013,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8012838e6f5ac4c6daaa24997235ad6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  widthTextField: {fileID: 0}
+  heightTextField: {fileID: 0}
 --- !u!1 &2084476841
 GameObject:
   m_ObjectHideFlags: 0

@@ -14,8 +14,6 @@ public interface IBoard {
 public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnChanged
 {
     [SerializeField]
-    private Vector2Int size;
-    [SerializeField]
     private Square originalSquare;
 
     private Matrix<Square> squareMatrix;
@@ -35,6 +33,11 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
             .ToList());
 
     void Start() {
+        // PlayerPrefからサイズを取得
+        var x = PlayerPrefs.GetInt("ReversiWidth", 8);
+        var y = PlayerPrefs.GetInt("ReversiHeight", 8);
+        Vector2Int size = new Vector2Int(x, y);
+
         squareMatrix = new Matrix<Square>(size.y, size.x);
 
         StoneFlipper flipper = new StoneFlipper(this);
