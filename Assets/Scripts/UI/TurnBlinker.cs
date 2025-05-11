@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class TurnBlinker : SerializedMonoBehaviour
 {
     [SerializeField]
-    IObservableTurnChanged observableTurnChanged;
+    IObservableCurrentTurnColor observableTurnChanged;
     [SerializeField]
     private Outline blackOutline;
     [SerializeField]
@@ -35,7 +35,7 @@ public class TurnBlinker : SerializedMonoBehaviour
 
         // ターンが変わったら
         observableTurnChanged
-            .ObservableTurnChanged
+            .CurrentStoneColor
             .Subscribe(color =>
             {
                 stoneStatusOutlineMap[nowTurn].effectDistance = Vector2.zero;

@@ -6,12 +6,13 @@ using UnityUtility.Collections;
 using UnityUtility.Enums;
 using R3;
 using MoreLinq.Extensions;
+using System.Threading.Tasks;
 
 public interface IBoard {
     IReadOnlyMatrix<Square> Squares { get; }
     SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction);
 }
-public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnChanged
+public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableCurrentTurnColor
 {
     [SerializeField]
     private Vector2Int size;
@@ -20,12 +21,21 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
 
     private Matrix<Square> squareMatrix;
     private ScoreManager scoreManager;
-    private Subject<StoneColor> turnChangedSubject = new();
+    private ReactiveProperty<StoneColor> currentStoneColor = new(StoneProvider.initialStoneColor);
+
+    private TaskCompletionSource<StoneColor> squareGenerateCompletedTask = new();
 
     public IReadOnlyMatrix<Square> Squares => squareMatrix;
 
-    public Observable<StoneColor> ObservableTurnChanged => turnChangedSubject.AsObservable();
-
+    /// <summary>
+    /// ターンが始まった時、またはターンが変わったときに、現在のターンの色を取得が発行される
+    /// </summary>
+    /// <returns></returns>
+    public Observable<StoneColor> CurrentStoneColor =>
+        Observable
+            .FromAsync(async ct => await squareGenerateCompletedTask.Task) // マス目の生成が終わるまで待つ
+            .Skip(1) // Task完了による通知はスキップする
+            .Concat(currentStoneColor);
     public Observable<int> ObservableBlackScore => scoreManager.ObservableBlackScore;
     public Observable<int> ObservableWhiteScore => scoreManager.ObservableWhiteScore;
 
@@ -39,11 +49,12 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
 
         StoneFlipper flipper = new StoneFlipper(this);
         StoneProvider stoneProvider = new StoneProvider();
+        SquarePlaceableInfoProvider squarePlaceableInfoProvider = new SquarePlaceableInfoProvider(size, flipper, this);
 
+        // マス目を順に生成
         EnumerableFactory
             .FromVector2Int(size)
             .ForEach(coord => {
-                // マス目を順に生成
                 Square square = Instantiate(originalSquare, transform);
                 var squareSize = square.SpriteSize;
                 square.transform.position = new Vector2(coord.x * squareSize.x, coord.y * squareSize.y);
@@ -54,8 +65,8 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
 
                 // マスにマウスが乗ったら、石の色を取得してValidateし、OKならBorderを変える
                 square.ObservableEnter
-                    .Select(_ => stoneProvider.GetCurrentStoneColor())
-                    .Select(stoneColor => flipper.GetFlippableSquareSequencesPerDirection(index, stoneColor))
+                    .Where(_ => squarePlaceableInfoProvider.Current.IsPlaceable(index))
+                    .Select(_ => flipper.GetFlippableSquareSequencesPerDirection(index, stoneProvider.GetCurrentStoneColor()))
                     .Where(sq => sq.Count() > 0)
                     .SubscribeAwait(async (sq, ct) =>
                     {
@@ -75,7 +86,7 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                         // 石を置いたので、次に置く色の色を変える
                         var nextColor = stoneProvider.Switch();
                         // ターンが変わったことを通知する
-                        turnChangedSubject.OnNext(nextColor);
+                        currentStoneColor.Value = nextColor;
                     });
 
                 // 行列にセット
@@ -83,7 +94,7 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
             });
 
         // ターンが変わったら、全てのマスのBorderをリセット
-        ObservableTurnChanged.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None));
+        CurrentStoneColor.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None));
 
         // スコアを管理する
         scoreManager = new ScoreManager(squareMatrix);
@@ -99,6 +110,9 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
         squareMatrix.Get(size.x / 2, size.y / 2).StoneStatus = StoneStatus.White;
         squareMatrix.Get(size.x / 2, size.y / 2 - 1).StoneStatus = StoneStatus.Black;
         squareMatrix.Get(size.x / 2 - 1, size.y / 2).StoneStatus = StoneStatus.Black;
+
+        // マス目の生成が終わったのでタスクを完了する
+        squareGenerateCompletedTask.SetResult(stoneProvider.GetCurrentStoneColor());
     }
 
     private class ScoreManager : IObservableScore
