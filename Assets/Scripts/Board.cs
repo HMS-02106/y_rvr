@@ -7,11 +7,7 @@ using UnityUtility.Enums;
 using R3;
 using MoreLinq.Extensions;
 
-public interface IBoard {
-    IReadOnlyMatrix<Square> Squares { get; }
-    SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction);
-}
-public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnChanged
+public class Board : MonoBehaviour, IObservableScore, IObservableTurnChanged
 {
     [SerializeField]
     private Square originalSquare;
