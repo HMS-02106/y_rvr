@@ -1,6 +1,6 @@
-using R3;
+// using R3;
 
-public interface IObservableCurrentTurnColor
-{
-    Observable<StoneColor> ObservableCurrentStoneColor { get; }
-}
+// public interface IObservableCurrentTurnColor
+// {
+//     Observable<StoneColor> ObservableCurrentStoneColor { get; }
+// }
