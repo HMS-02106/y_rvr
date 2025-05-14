@@ -25,7 +25,7 @@ public class Board : MonoBehaviour, IObservableScore, IObservableCurrentTurnColo
     /// ターンが始まった時、またはターンが変わったときに、現在のターンの色を取得が発行される
     /// </summary>
     /// <returns></returns>
-    public Observable<StoneColor> CurrentStoneColor =>
+    public Observable<StoneColor> ObservableCurrentStoneColor =>
         Observable
             .FromAsync(async ct => await squareGenerateCompletedTask.Task) // マス目の生成が終わるまで待つ
             .Skip(1) // Task完了による通知はスキップする
@@ -49,6 +49,7 @@ public class Board : MonoBehaviour, IObservableScore, IObservableCurrentTurnColo
         StoneFlipper flipper = new StoneFlipper(this);
         StoneProvider stoneProvider = new StoneProvider();
         SquarePlaceableInfoProvider squarePlaceableInfoProvider = new SquarePlaceableInfoProvider(size, flipper, this);
+        GameEndDetector gameEndDetector = new GameEndDetector(squarePlaceableInfoProvider, this);
 
         // マス目を順に生成
         EnumerableFactory
@@ -93,7 +94,7 @@ public class Board : MonoBehaviour, IObservableScore, IObservableCurrentTurnColo
             });
 
         // ターンが変わったら、全てのマスのBorderをリセット
-        CurrentStoneColor.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None));
+        ObservableCurrentStoneColor.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None));
 
         // スコアを管理する
         scoreManager = new ScoreManager(squareMatrix);

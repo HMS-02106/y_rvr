@@ -14,4 +14,6 @@ public class SquarePlaceableInfo
     {
         return placeableIndexes.Contains(index);
     }
+
+    public bool IsAnyPlaceable() => placeableIndexes.Count > 0;
 }

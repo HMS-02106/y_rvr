@@ -10,7 +10,7 @@ public class SquarePlaceableInfoProvider
     public SquarePlaceableInfoProvider(Vector2Int size, StoneFlipper flipper, IObservableCurrentTurnColor turnChanged)
     {
         // ターンが変わったタイミングでSquarePlaceableInfoを更新する
-        turnChanged.CurrentStoneColor
+        turnChanged.ObservableCurrentStoneColor
             .Subscribe(stoneColor =>
             {
                 var placeableIndexes = EnumerableFactory

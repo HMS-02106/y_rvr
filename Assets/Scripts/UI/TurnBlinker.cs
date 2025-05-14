@@ -35,7 +35,7 @@ public class TurnBlinker : SerializedMonoBehaviour
 
         // ターンが変わったら
         observableTurnChanged
-            .CurrentStoneColor
+            .ObservableCurrentStoneColor
             .Subscribe(color =>
             {
                 stoneStatusOutlineMap[nowTurn].effectDistance = Vector2.zero;

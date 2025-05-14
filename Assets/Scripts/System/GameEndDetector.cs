@@ -2,22 +2,14 @@ using UnityEngine;
 using R3;
 using System.Linq;
 
-public class GameEndDetector : MonoBehaviour
+public class GameEndDetector
 {
-    [SerializeField]
-    private Board board;
-
-    void Start()
+    public GameEndDetector(SquarePlaceableInfoProvider squarePlaceableInfoProvider, Board board)
     {
         // ターンが変わるたびにEmptyの個数を数える
-        board.CurrentStoneColor.Subscribe(_ =>
+        board.ObservableCurrentStoneColor.Where(_ => !squarePlaceableInfoProvider.Current.IsAnyPlaceable()).Subscribe(_ =>
         {
-            int emptyCount = board.Squares.Count(square => square.StoneStatus == StoneStatus.Empty);
-            // Emptyがなくなったらゲーム終了
-            if (emptyCount == 0)
-            {
-                Debug.Log("Game End");
-            }
+            Debug.Log("Game End");
         });
     }
 }
