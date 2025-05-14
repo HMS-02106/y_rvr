@@ -10,7 +10,7 @@ public class GameEndDetector : MonoBehaviour
     void Start()
     {
         // ターンが変わるたびにEmptyの個数を数える
-        board.ObservableTurnChanged.Subscribe(_ =>
+        board.CurrentStoneColor.Subscribe(_ =>
         {
             int emptyCount = board.Squares.Count(square => square.StoneStatus == StoneStatus.Empty);
             // Emptyがなくなったらゲーム終了
