@@ -43,7 +43,7 @@ public class TurnBlinker : SerializedMonoBehaviour
             });
 
         int count = 0;
-        Observable.Interval(TimeSpan.FromSeconds(1))
+        Observable.Interval(TimeSpan.FromSeconds(0.4d))
             .Select(_ => count++ % 2 == 0)
             .Subscribe(isFlash => stoneStatusOutlineMap[nowTurn].effectDistance = isFlash ? defaultValue : Vector2.zero);
     }
