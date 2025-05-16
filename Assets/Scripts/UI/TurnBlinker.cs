@@ -16,7 +16,7 @@ public class TurnBlinker : SerializedMonoBehaviour
     private Outline whiteOutline;
 
     private Vector2 defaultValue;
-    private StoneColor nowTurn = StoneProvider.initialStoneColor;
+    private StoneColor nowTurn = TurnManager.initialStoneColor;
     private Dictionary<StoneColor, Outline> stoneStatusOutlineMap;
     void Start()
     {
