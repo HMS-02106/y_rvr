@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using R3;
 using System.Linq;
@@ -5,13 +6,15 @@ using System.Linq;
 /// <summary>
 /// 置ける石がなくなったらパスし、両者とも連続でパスしたらゲーム終了と検知する
 /// </summary>
-public class PassAndGameEndDetector
+public class PassAndGameEndDetector : MonoBehaviour
 {
-    private int passCount = 0;
-    public PassAndGameEndDetector(SquarePlaceableInfoProvider squarePlaceableInfoProvider, TurnManager turnManager)
+    public event Action OnGameEnd;
+    public event Action OnPass;
+    public void StartDetection(SquarePlaceableInfoProvider squarePlaceableInfoProvider, IObservableCurrentTurnColor observableCurrentTurnColor)
     {
+        int passCount = 0;
         // ターンが変わるたびに置ける場所があるかチェックする
-        turnManager.ObservableCurrentStoneColor.Subscribe(_ =>
+        observableCurrentTurnColor.ObservableCurrentStoneColor.Subscribe(_ =>
         {
             if (squarePlaceableInfoProvider.Current.IsAnyPlaceable())
             {
@@ -26,14 +29,14 @@ public class PassAndGameEndDetector
             {
                 // ゲーム終了
                 Debug.Log("Game End");
+                OnGameEnd?.Invoke();
             }
             else
             {
                 // パス
                 Debug.Log("Pass");
-                turnManager.Switch();
+                OnPass?.Invoke();
             }
-            
         });
     }
 }

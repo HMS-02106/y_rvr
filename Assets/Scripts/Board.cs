@@ -14,6 +14,8 @@ public class Board : MonoBehaviour, IObservableScore
     private Square originalSquare;
     [SerializeField]
     private TurnManager turnManager;
+    [SerializeField]
+    private PassAndGameEndDetector passAndGameEndDetector;
 
     private Matrix<Square> squareMatrix;
     private ScoreManager scoreManager;
@@ -38,7 +40,10 @@ public class Board : MonoBehaviour, IObservableScore
 
         StoneFlipper flipper = new StoneFlipper(this);
         SquarePlaceableInfoProvider squarePlaceableInfoProvider = new SquarePlaceableInfoProvider(size, flipper, turnManager);
-        PassAndGameEndDetector gameEndDetector = new PassAndGameEndDetector(squarePlaceableInfoProvider, turnManager);
+
+        // パスとゲーム終了の検知を開始して、パスしたらターンを変える
+        passAndGameEndDetector.StartDetection(squarePlaceableInfoProvider, turnManager);
+        passAndGameEndDetector.OnPass += () => turnManager.Switch();
 
         // マス目を順に生成
         EnumerableFactory
