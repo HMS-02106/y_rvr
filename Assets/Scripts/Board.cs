@@ -38,7 +38,7 @@ public class Board : MonoBehaviour, IObservableScore
 
         StoneFlipper flipper = new StoneFlipper(this);
         SquarePlaceableInfoProvider squarePlaceableInfoProvider = new SquarePlaceableInfoProvider(size, flipper, turnManager);
-        PassAndGameEndDetector gameEndDetector = new PassAndGameEndDetector(squarePlaceableInfoProvider, turnManager, turnManager);
+        PassAndGameEndDetector gameEndDetector = new PassAndGameEndDetector(squarePlaceableInfoProvider, turnManager);
 
         // マス目を順に生成
         EnumerableFactory

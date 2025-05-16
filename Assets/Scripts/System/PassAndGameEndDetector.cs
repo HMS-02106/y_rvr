@@ -8,10 +8,10 @@ using System.Linq;
 public class PassAndGameEndDetector
 {
     private int passCount = 0;
-    public PassAndGameEndDetector(SquarePlaceableInfoProvider squarePlaceableInfoProvider, IObservableCurrentTurnColor observableCurrentTurnColor, TurnManager turnManager)
+    public PassAndGameEndDetector(SquarePlaceableInfoProvider squarePlaceableInfoProvider, TurnManager turnManager)
     {
         // ターンが変わるたびに置ける場所があるかチェックする
-        observableCurrentTurnColor.ObservableCurrentStoneColor.Subscribe(_ =>
+        turnManager.ObservableCurrentStoneColor.Subscribe(_ =>
         {
             if (squarePlaceableInfoProvider.Current.IsAnyPlaceable())
             {
