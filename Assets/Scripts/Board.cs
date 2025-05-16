@@ -20,16 +20,6 @@ public class Board : MonoBehaviour, IObservableScore
 
     public IReadOnlyMatrix<Square> Squares => squareMatrix;
 
-    /// <summary>
-    /// ターンが始まった時、またはターンが変わったときに、現在のターンの色を取得が発行される
-    /// </summary>
-    // /// <returns></returns>
-    // public Observable<StoneColor> ObservableCurrentStoneColor =>
-    //     Observable
-    //         .FromAsync(async ct => await squareGenerateCompletedTask.Task) // マス目の生成が終わるまで待つ
-    //         .Skip(1) // Task完了による通知はスキップする
-    //         .Concat(turnManager.ObservableCurrentStoneColor); // ターンが変わったら通知する;
-            // .Share();
     public Observable<int> ObservableBlackScore => scoreManager.ObservableBlackScore;
     public Observable<int> ObservableWhiteScore => scoreManager.ObservableWhiteScore;
 
@@ -76,18 +66,11 @@ public class Board : MonoBehaviour, IObservableScore
                         sq.ForEach(sq => sq.BorderStatus = BorderStatus.None);
                     });
 
-                // マスをクリックしたら、石の色を取得してひっくり返る石を取得し、OKなら石を置く
+                // マスをクリックしたら、石の色を取得してひっくり返る石を取得し、OKなら石を置き、ターンを変える
                 square.ObservableClick
                     .Select(_ => turnManager.GetCurrentStoneColor())
                     .Where(stoneColor => flipper.Put(index, stoneColor))
-                    .Subscribe(stoneColor =>
-                    {
-                        turnManager.Switch();
-                        // // 石を置いたので、次に置く色の色を変える
-                        // var nextColor = stoneProvider.Switch();
-                        // // ターンが変わったことを通知する
-                        // currentStoneColor.Value = nextColor;
-                    });
+                    .Subscribe(stoneColor => turnManager.Switch());
 
                 // 行列にセット
                 squareMatrix.Set(square, index);
