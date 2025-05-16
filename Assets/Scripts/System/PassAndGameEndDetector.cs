@@ -10,7 +10,7 @@ public class PassAndGameEndDetector
     private int passCount = 0;
     public PassAndGameEndDetector(SquarePlaceableInfoProvider squarePlaceableInfoProvider, IObservableCurrentTurnColor observableCurrentTurnColor, TurnManager turnManager)
     {
-        // ターンが変わるたびにEmptyの個数を数える
+        // ターンが変わるたびに置ける場所があるかチェックする
         observableCurrentTurnColor.ObservableCurrentStoneColor.Subscribe(_ =>
         {
             if (squarePlaceableInfoProvider.Current.IsAnyPlaceable())
