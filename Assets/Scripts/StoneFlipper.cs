@@ -9,9 +9,9 @@ using MoreLinq.Extensions;
 
 public class StoneFlipper
 {
-    private IBoard board;
+    private Board board;
 
-    public StoneFlipper(IBoard board)
+    public StoneFlipper(Board board)
     {
         this.board = board;
     }

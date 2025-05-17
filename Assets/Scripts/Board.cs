@@ -6,25 +6,21 @@ using UnityUtility.Collections;
 using UnityUtility.Enums;
 using R3;
 using MoreLinq.Extensions;
+using System.Threading.Tasks;
 
-public interface IBoard {
-    IReadOnlyMatrix<Square> Squares { get; }
-    SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction);
-}
-public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnChanged
+public class Board : MonoBehaviour, IObservableScore
 {
     [SerializeField]
-    private Vector2Int size;
-    [SerializeField]
     private Square originalSquare;
+    [SerializeField]
+    private TurnManager turnManager;
+    [SerializeField]
+    private PassAndGameEndDetector passAndGameEndDetector;
 
     private Matrix<Square> squareMatrix;
     private ScoreManager scoreManager;
-    private Subject<StoneColor> turnChangedSubject = new();
 
     public IReadOnlyMatrix<Square> Squares => squareMatrix;
-
-    public Observable<StoneColor> ObservableTurnChanged => turnChangedSubject.AsObservable();
 
     public Observable<int> ObservableBlackScore => scoreManager.ObservableBlackScore;
     public Observable<int> ObservableWhiteScore => scoreManager.ObservableWhiteScore;
@@ -35,15 +31,24 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
             .ToList());
 
     void Start() {
+        // PlayerPrefからサイズを取得
+        var x = PlayerPrefs.GetInt("ReversiWidth", 8);
+        var y = PlayerPrefs.GetInt("ReversiHeight", 8);
+        Vector2Int size = new Vector2Int(x, y);
+
         squareMatrix = new Matrix<Square>(size.y, size.x);
 
         StoneFlipper flipper = new StoneFlipper(this);
-        StoneProvider stoneProvider = new StoneProvider();
+        SquarePlaceableInfoProvider squarePlaceableInfoProvider = new SquarePlaceableInfoProvider(size, flipper, turnManager, gameObject);
 
+        // パスとゲーム終了の検知を開始して、パスしたらターンを変える
+        passAndGameEndDetector.StartDetection(squarePlaceableInfoProvider, turnManager);
+        passAndGameEndDetector.OnPass += () => turnManager.Switch();
+
+        // マス目を順に生成
         EnumerableFactory
             .FromVector2Int(size)
             .ForEach(coord => {
-                // マス目を順に生成
                 Square square = Instantiate(originalSquare, transform);
                 var squareSize = square.SpriteSize;
                 square.transform.position = new Vector2(coord.x * squareSize.x, coord.y * squareSize.y);
@@ -54,8 +59,8 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
 
                 // マスにマウスが乗ったら、石の色を取得してValidateし、OKならBorderを変える
                 square.ObservableEnter
-                    .Select(_ => stoneProvider.GetCurrentStoneColor())
-                    .Select(stoneColor => flipper.GetFlippableSquareSequencesPerDirection(index, stoneColor))
+                    .Where(_ => squarePlaceableInfoProvider.Current.IsPlaceable(index))
+                    .Select(_ => flipper.GetFlippableSquareSequencesPerDirection(index, turnManager.GetCurrentStoneColor()))
                     .Where(sq => sq.Count() > 0)
                     .SubscribeAwait(async (sq, ct) =>
                     {
@@ -64,29 +69,25 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
                         await square.ObservableExit.FirstAsync();
                         square.BorderStatus = BorderStatus.None;
                         sq.ForEach(sq => sq.BorderStatus = BorderStatus.None);
-                    });
+                    })
+                    .AddTo(this);
 
-                // マスをクリックしたら、石の色を取得してひっくり返る石を取得し、OKなら石を置く
+                // マスをクリックしたら、石の色を取得してひっくり返る石を取得し、OKなら石を置き、ターンを変える
                 square.ObservableClick
-                    .Select(_ => stoneProvider.GetCurrentStoneColor())
+                    .Select(_ => turnManager.GetCurrentStoneColor())
                     .Where(stoneColor => flipper.Put(index, stoneColor))
-                    .Subscribe(stoneColor =>
-                    {
-                        // 石を置いたので、次に置く色の色を変える
-                        var nextColor = stoneProvider.Switch();
-                        // ターンが変わったことを通知する
-                        turnChangedSubject.OnNext(nextColor);
-                    });
+                    .Subscribe(stoneColor => turnManager.Switch())
+                    .AddTo(this);
 
                 // 行列にセット
                 squareMatrix.Set(square, index);
             });
 
         // ターンが変わったら、全てのマスのBorderをリセット
-        ObservableTurnChanged.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None));
+        turnManager.ObservableCurrentStoneColor.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None)).AddTo(this);
 
         // スコアを管理する
-        scoreManager = new ScoreManager(squareMatrix);
+        scoreManager = new ScoreManager(squareMatrix, gameObject);
         
         // 中心に持ってくる
         this.transform.position = new Vector2(
@@ -99,6 +100,9 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
         squareMatrix.Get(size.x / 2, size.y / 2).StoneStatus = StoneStatus.White;
         squareMatrix.Get(size.x / 2, size.y / 2 - 1).StoneStatus = StoneStatus.Black;
         squareMatrix.Get(size.x / 2 - 1, size.y / 2).StoneStatus = StoneStatus.Black;
+
+        // マス目の生成が終わったのでタスクを完了する
+        turnManager.SetSquareGenerateCompleted();
     }
 
     private class ScoreManager : IObservableScore
@@ -108,12 +112,12 @@ public class Board : MonoBehaviour, IBoard, IObservableScore, IObservableTurnCha
         public Observable<int> ObservableBlackScore => blackScoreSubject.AsObservable();
         public Observable<int> ObservableWhiteScore => whiteScoreSubject.AsObservable();
 
-        public ScoreManager(IEnumerable<IColorCountChangeNotifier> colorCountChangeNotifiers)
+        public ScoreManager(IEnumerable<IColorCountChangeNotifier> colorCountChangeNotifiers, GameObject gameObject)
         {
             foreach (var notifier in colorCountChangeNotifiers)
             {
-                notifier.ObservableBlackStoneCount.Subscribe(count => blackScoreSubject.Value += count);
-                notifier.ObservableWhiteStoneCount.Subscribe(count => whiteScoreSubject.Value += count);
+                notifier.ObservableBlackStoneCount.Subscribe(count => blackScoreSubject.Value += count).AddTo(gameObject);
+                notifier.ObservableWhiteStoneCount.Subscribe(count => whiteScoreSubject.Value += count).AddTo(gameObject);
             }
         }
     }

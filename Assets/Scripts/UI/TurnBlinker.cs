@@ -9,14 +9,14 @@ using UnityEngine.UI;
 public class TurnBlinker : SerializedMonoBehaviour
 {
     [SerializeField]
-    IObservableTurnChanged observableTurnChanged;
+    IObservableCurrentTurnColor observableTurnChanged;
     [SerializeField]
     private Outline blackOutline;
     [SerializeField]
     private Outline whiteOutline;
 
     private Vector2 defaultValue;
-    private StoneColor nowTurn = StoneProvider.initialStoneColor;
+    private StoneColor nowTurn = TurnManager.initialStoneColor;
     private Dictionary<StoneColor, Outline> stoneStatusOutlineMap;
     void Start()
     {
@@ -35,16 +35,18 @@ public class TurnBlinker : SerializedMonoBehaviour
 
         // ターンが変わったら
         observableTurnChanged
-            .ObservableTurnChanged
+            .ObservableCurrentStoneColor
             .Subscribe(color =>
             {
                 stoneStatusOutlineMap[nowTurn].effectDistance = Vector2.zero;
                 nowTurn = color;
-            });
+            })
+            .AddTo(this);
 
         int count = 0;
-        Observable.Interval(TimeSpan.FromSeconds(1))
+        Observable.Interval(TimeSpan.FromSeconds(0.4d))
             .Select(_ => count++ % 2 == 0)
-            .Subscribe(isFlash => stoneStatusOutlineMap[nowTurn].effectDistance = isFlash ? defaultValue : Vector2.zero);
+            .Subscribe(isFlash => stoneStatusOutlineMap[nowTurn].effectDistance = isFlash ? defaultValue : Vector2.zero)
+            .AddTo(this);
     }
 }
