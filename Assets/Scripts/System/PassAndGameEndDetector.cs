@@ -37,6 +37,7 @@ public class PassAndGameEndDetector : MonoBehaviour
                 Debug.Log("Pass");
                 OnPass?.Invoke();
             }
-        });
+        })
+        .AddTo(this);
     }
 }

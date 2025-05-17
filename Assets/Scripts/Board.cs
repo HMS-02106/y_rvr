@@ -39,7 +39,7 @@ public class Board : MonoBehaviour, IObservableScore
         squareMatrix = new Matrix<Square>(size.y, size.x);
 
         StoneFlipper flipper = new StoneFlipper(this);
-        SquarePlaceableInfoProvider squarePlaceableInfoProvider = new SquarePlaceableInfoProvider(size, flipper, turnManager);
+        SquarePlaceableInfoProvider squarePlaceableInfoProvider = new SquarePlaceableInfoProvider(size, flipper, turnManager, gameObject);
 
         // パスとゲーム終了の検知を開始して、パスしたらターンを変える
         passAndGameEndDetector.StartDetection(squarePlaceableInfoProvider, turnManager);
@@ -69,23 +69,25 @@ public class Board : MonoBehaviour, IObservableScore
                         await square.ObservableExit.FirstAsync();
                         square.BorderStatus = BorderStatus.None;
                         sq.ForEach(sq => sq.BorderStatus = BorderStatus.None);
-                    });
+                    })
+                    .AddTo(this);
 
                 // マスをクリックしたら、石の色を取得してひっくり返る石を取得し、OKなら石を置き、ターンを変える
                 square.ObservableClick
                     .Select(_ => turnManager.GetCurrentStoneColor())
                     .Where(stoneColor => flipper.Put(index, stoneColor))
-                    .Subscribe(stoneColor => turnManager.Switch());
+                    .Subscribe(stoneColor => turnManager.Switch())
+                    .AddTo(this);
 
                 // 行列にセット
                 squareMatrix.Set(square, index);
             });
 
         // ターンが変わったら、全てのマスのBorderをリセット
-        turnManager.ObservableCurrentStoneColor.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None));
+        turnManager.ObservableCurrentStoneColor.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None)).AddTo(this);
 
         // スコアを管理する
-        scoreManager = new ScoreManager(squareMatrix);
+        scoreManager = new ScoreManager(squareMatrix, gameObject);
         
         // 中心に持ってくる
         this.transform.position = new Vector2(
@@ -110,12 +112,12 @@ public class Board : MonoBehaviour, IObservableScore
         public Observable<int> ObservableBlackScore => blackScoreSubject.AsObservable();
         public Observable<int> ObservableWhiteScore => whiteScoreSubject.AsObservable();
 
-        public ScoreManager(IEnumerable<IColorCountChangeNotifier> colorCountChangeNotifiers)
+        public ScoreManager(IEnumerable<IColorCountChangeNotifier> colorCountChangeNotifiers, GameObject gameObject)
         {
             foreach (var notifier in colorCountChangeNotifiers)
             {
-                notifier.ObservableBlackStoneCount.Subscribe(count => blackScoreSubject.Value += count);
-                notifier.ObservableWhiteStoneCount.Subscribe(count => whiteScoreSubject.Value += count);
+                notifier.ObservableBlackStoneCount.Subscribe(count => blackScoreSubject.Value += count).AddTo(gameObject);
+                notifier.ObservableWhiteStoneCount.Subscribe(count => whiteScoreSubject.Value += count).AddTo(gameObject);
             }
         }
     }

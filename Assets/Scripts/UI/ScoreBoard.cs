@@ -14,7 +14,7 @@ public class ScoreBoard : SerializedMonoBehaviour
 
     void Start()
     {
-        observableScore.ObservableBlackScore.Subscribe(score => blackText.text = score.ToString());
-        observableScore.ObservableWhiteScore.Subscribe(score => whiteText.text = score.ToString());
+        observableScore.ObservableBlackScore.Subscribe(score => blackText.text = score.ToString()).AddTo(this);
+        observableScore.ObservableWhiteScore.Subscribe(score => whiteText.text = score.ToString()).AddTo(this);
     }
 }

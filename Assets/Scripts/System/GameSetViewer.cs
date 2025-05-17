@@ -8,15 +8,18 @@ public class GameSetViewer : MonoBehaviour
     private PassAndGameEndDetector passAndGameEndDetector;
     [SerializeField]
     private GameObject gameSetPanel;
+    [SerializeField]
+    private GameObject returnButton;
 
     void Start()
     {
         gameSetPanel.SetActive(false);
+        returnButton.SetActive(false);
 
-        // ゲーム終了時にゲームセットパネルを表示する
         passAndGameEndDetector.OnGameEnd += () =>
         {
             gameSetPanel.SetActive(true);
+            returnButton.SetActive(true);
         };
     }
 
