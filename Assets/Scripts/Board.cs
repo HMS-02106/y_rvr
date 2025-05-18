@@ -55,7 +55,6 @@ public class Board : MonoBehaviour, IObservableScore
                 square.debugText.text = coord.ToString();
 
                 MatrixIndex index = new MatrixIndex(coord.y, coord.x);
-                // NOTE: これStoneProviderから提供してもらって、Select(_ => StoneProvider.Provide)でStoneを受け取り、それをValidateすべきだよなあ
 
                 // マスにマウスが乗ったら、石の色を取得してValidateし、OKならBorderを変える
                 square.ObservableEnter
@@ -96,10 +95,10 @@ public class Board : MonoBehaviour, IObservableScore
         );
 
         // 中心のマスに初期石をセットする
-        squareMatrix.Get(size.x / 2 - 1, size.y / 2 - 1).StoneStatus = StoneStatus.White;
-        squareMatrix.Get(size.x / 2, size.y / 2).StoneStatus = StoneStatus.White;
-        squareMatrix.Get(size.x / 2, size.y / 2 - 1).StoneStatus = StoneStatus.Black;
-        squareMatrix.Get(size.x / 2 - 1, size.y / 2).StoneStatus = StoneStatus.Black;
+        squareMatrix.Get(size.y / 2 - 1, size.x / 2 - 1).StoneStatus = StoneStatus.White;
+        squareMatrix.Get(size.y / 2    , size.x / 2    ).StoneStatus = StoneStatus.White;
+        squareMatrix.Get(size.y / 2 - 1, size.x / 2    ).StoneStatus = StoneStatus.Black;
+        squareMatrix.Get(size.y / 2    , size.x / 2 - 1).StoneStatus = StoneStatus.Black;
 
         // マス目の生成が終わったのでタスクを完了する
         turnManager.SetSquareGenerateCompleted();
