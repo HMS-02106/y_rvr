@@ -34,8 +34,12 @@ public class Board : MonoBehaviour, IObservableScore
         // PlayerPrefからサイズを取得
         var x = PlayerPrefs.GetInt("ReversiWidth", 8);
         var y = PlayerPrefs.GetInt("ReversiHeight", 8);
-        Vector2Int size = new Vector2Int(x, y);
+        var pointWeightString = PlayerPrefs.GetString("ReversiPointWeight", PointWeight.Flat.ToString());
+        if (!System.Enum.TryParse<PointWeight>(pointWeightString, out var pointWeight)) {
+            pointWeight = PointWeight.Flat;
+        }
 
+        Vector2Int size = new Vector2Int(x, y);
         squareMatrix = new Matrix<Square>(size.y, size.x);
 
         StoneFlipper flipper = new StoneFlipper(this);

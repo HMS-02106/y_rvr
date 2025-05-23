@@ -9,6 +9,8 @@ public class ReversiSceneSwitcher : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI heightTextField;
     [SerializeField]
+    private TMP_Dropdown pointWeightDropDown;
+    [SerializeField]
     private TextMeshProUGUI errorTextField;
 
     void Start()
@@ -21,6 +23,8 @@ public class ReversiSceneSwitcher : MonoBehaviour
         // なぜか ZERO WIDTH SPACEが含まれてしまうので削除する
         string widthText = widthTextField.text.Replace("\u200B", "").Trim();
         string heightText = heightTextField.text.Replace("\u200B", "").Trim();
+        // ウェイトタイプを取得
+        string pointWeightText = pointWeightDropDown.options[pointWeightDropDown.value].text;
 
         if (!int.TryParse(widthText, out int width))
         {
@@ -41,6 +45,7 @@ public class ReversiSceneSwitcher : MonoBehaviour
         // 盤面サイズをPlayerPrefsに保存
         PlayerPrefs.SetInt("ReversiWidth", width);
         PlayerPrefs.SetInt("ReversiHeight", height);
+        PlayerPrefs.SetString("ReversiPointWeight", pointWeightText);
         // シーン遷移
         UnityEngine.SceneManagement.SceneManager.LoadScene("Reversi");
     }
