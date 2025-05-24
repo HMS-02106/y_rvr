@@ -25,7 +25,7 @@ public class Board : MonoBehaviour, IObservableScore
     public Observable<int> ObservableBlackScore => scoreManager.ObservableBlackScore;
     public Observable<int> ObservableWhiteScore => scoreManager.ObservableWhiteScore;
 
-    public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new SquareSequence(
+    public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new(
         squareMatrix.GetDirectionEnumerable(origin, direction)
             .TakeWhile(square => square.IsStoneExists)
             .ToList());
@@ -33,11 +33,11 @@ public class Board : MonoBehaviour, IObservableScore
     void Start() {
         var conf = ReversiConf.CreateFromPlayerPrefs();
 
-        Vector2Int size = new Vector2Int(conf.ColumnSize, conf.RowSize);
+        Vector2Int size = new(conf.ColumnSize, conf.RowSize);
         squareMatrix = new SquareMatrix(size.y, size.x);
 
-        StoneFlipper flipper = new StoneFlipper(this);
-        SquarePlaceableInfoProvider squarePlaceableInfoProvider = new SquarePlaceableInfoProvider(size, flipper, turnManager, gameObject);
+        StoneFlipper flipper = new(this);
+        SquarePlaceableInfoProvider squarePlaceableInfoProvider = new(size, flipper, turnManager, gameObject);
 
         // パスとゲーム終了の検知を開始して、パスしたらターンを変える
         passAndGameEndDetector.StartDetection(squarePlaceableInfoProvider, turnManager);
