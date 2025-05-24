@@ -21,7 +21,7 @@ public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier //
 
     // for debug
     public TextMeshPro debugText;
-    private int point;
+    private int score;
 
     public Vector2 SpriteSize => spriteRenderer.bounds.size.DisZ();
     public bool IsStoneExists => stoneStatus == StoneStatus.White || stoneStatus == StoneStatus.Black;
@@ -37,16 +37,16 @@ public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier //
             switch (value)
             {
                 case StoneStatus.Black:
-                    blackStoneCountSubject.OnNext(1); break;
+                    blackStoneCountSubject.OnNext(score); break;
                 case StoneStatus.White:
-                    whiteStoneCountSubject.OnNext(1); break;
+                    whiteStoneCountSubject.OnNext(score); break;
             }
             switch (stoneStatus)
             {
                 case StoneStatus.Black:
-                    blackStoneCountSubject.OnNext(-1); break;
+                    blackStoneCountSubject.OnNext(-score); break;
                 case StoneStatus.White:
-                    whiteStoneCountSubject.OnNext(-1); break;
+                    whiteStoneCountSubject.OnNext(-score); break;
             }
             this.stoneStatus = value;
             stone.SetStatus(value);
@@ -63,15 +63,15 @@ public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier //
     public Observable<int> ObservableBlackStoneCount => blackStoneCountSubject.AsObservable();
     public Observable<int> ObservableWhiteStoneCount => whiteStoneCountSubject.AsObservable();
 
-    public int Point
+    public int Score
     {
-        get => point;
+        get => score;
         set
         {
-            point = value;
+            score = value;
             if (debugText != null)
             {
-                debugText.text = point.ToString();
+                debugText.text = score.ToString();
             }
         }
     }

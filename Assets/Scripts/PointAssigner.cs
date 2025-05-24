@@ -55,7 +55,7 @@ public static class PointAssigner
         {
             foreach (var square in sources)
             {
-                square.Point = 1;
+                square.Score = 1;
             }
         }
     }
@@ -85,7 +85,7 @@ public static class PointAssigner
                     .Select(centerIndex => (centerIndex.ToVector2Int() - index.ToVector2Int()).ManhattanDistance())
                     .Min();
                 // ポイントはintで丸める
-                square.Point = (int)(Max - stepNumFromCenter * deltaPerStep);
+                square.Score = (int)(Max - stepNumFromCenter * deltaPerStep);
             }
         }
     }
@@ -113,7 +113,7 @@ public static class PointAssigner
         {
             foreach (var square in sources)
             {
-                square.Point = Random.Range(Min, Max);
+                square.Score = Random.Range(Min, Max);
             }
         }
     }
