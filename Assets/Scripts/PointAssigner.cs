@@ -42,6 +42,9 @@ public static class PointAssigner
         public abstract void AssignTo(SquareMatrix sources);
     }
 
+    /// <summary>
+    /// すべて1
+    /// </summary>
     public class FlatPointAssigner : PointAssignerImpl
     {
         public FlatPointAssigner(int min, int max) : base(min, max)
@@ -56,6 +59,10 @@ public static class PointAssigner
             }
         }
     }
+
+    /// <summary>
+    /// 中心が最もポイントが高く、端に行くほど低くなる
+    /// </summary>
     public class CenterPointAssigner : PointAssignerImpl
     {
         public CenterPointAssigner(int min, int max) : base(min, max)
@@ -82,22 +89,20 @@ public static class PointAssigner
             }
         }
     }
-    public class EdgePointAssigner : PointAssignerImpl
-    {
-        public EdgePointAssigner(int min, int max) : base(min, max)
-        {
-        }
 
-        public override void AssignTo(SquareMatrix sources)
+    /// <summary>
+    /// CenterPointAssignerの逆で、端が最もポイントが高く、中心に行くほど低くなる
+    /// </summary>
+    public class EdgePointAssigner : CenterPointAssigner
+    {
+        public EdgePointAssigner(int min, int max) : base(max, min)
         {
-            var edge = new Vector2Int(sources.RowSize / 2, sources.ColumnSize / 2);
-            foreach (var (square, index) in sources.GetEnumeratorWithIndex())
-            {
-                var distance = Vector2Int.Distance(index.ToVector2Int(), edge);
-                square.Point = (int)Mathf.Max(0, 1 - distance / (sources.RowSize / 2));
-            }
         }
     }
+
+    /// <summary>
+    /// ランダムにポイントを割り当てる
+    /// </summary>
     public class RandomPointAssigner : PointAssignerImpl
     {
         public RandomPointAssigner(int min, int max) : base(min, max)
