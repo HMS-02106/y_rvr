@@ -9,10 +9,10 @@ public class SquareMatrix : Matrix<Square>
     public MatrixIndex[] GetCenterIndexes()
     {
         return new[] {
-            new MatrixIndex(ColumnSize / 2 - 1, RowSize / 2 - 1),
-            new MatrixIndex(ColumnSize / 2,     RowSize / 2),
-            new MatrixIndex(ColumnSize / 2 - 1, RowSize / 2),
-            new MatrixIndex(ColumnSize / 2,     RowSize / 2 - 1),
+            new MatrixIndex(RowSize / 2 - 1, ColumnSize / 2 - 1),
+            new MatrixIndex(RowSize / 2,     ColumnSize / 2),
+            new MatrixIndex(RowSize / 2 - 1, ColumnSize / 2),
+            new MatrixIndex(RowSize / 2,     ColumnSize / 2 - 1),
         };
     }
 
