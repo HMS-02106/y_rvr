@@ -17,7 +17,7 @@ public class Board : MonoBehaviour, IObservableScore
     [SerializeField]
     private PassAndGameEndDetector passAndGameEndDetector;
 
-    private Matrix<Square> squareMatrix;
+    private SquareMatrix squareMatrix;
     private ScoreManager scoreManager;
 
     public IReadOnlyMatrix<Square> Squares => squareMatrix;
@@ -25,21 +25,19 @@ public class Board : MonoBehaviour, IObservableScore
     public Observable<int> ObservableBlackScore => scoreManager.ObservableBlackScore;
     public Observable<int> ObservableWhiteScore => scoreManager.ObservableWhiteScore;
 
-    public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new SquareSequence(
+    public SquareSequence GetDirectionSquareSequence(MatrixIndex origin, Direction8 direction) => new(
         squareMatrix.GetDirectionEnumerable(origin, direction)
             .TakeWhile(square => square.IsStoneExists)
             .ToList());
 
     void Start() {
-        // PlayerPrefからサイズを取得
-        var x = PlayerPrefs.GetInt("ReversiWidth", 8);
-        var y = PlayerPrefs.GetInt("ReversiHeight", 8);
-        Vector2Int size = new Vector2Int(x, y);
+        var conf = ReversiConf.CreateFromPlayerPrefs();
 
-        squareMatrix = new Matrix<Square>(size.y, size.x);
+        Vector2Int size = new(conf.ColumnSize, conf.RowSize);
+        squareMatrix = new SquareMatrix(size.y, size.x);
 
-        StoneFlipper flipper = new StoneFlipper(this);
-        SquarePlaceableInfoProvider squarePlaceableInfoProvider = new SquarePlaceableInfoProvider(size, flipper, turnManager, gameObject);
+        StoneFlipper flipper = new(this);
+        SquarePlaceableInfoProvider squarePlaceableInfoProvider = new(size, flipper, turnManager, gameObject);
 
         // パスとゲーム終了の検知を開始して、パスしたらターンを変える
         passAndGameEndDetector.StartDetection(squarePlaceableInfoProvider, turnManager);
@@ -52,7 +50,6 @@ public class Board : MonoBehaviour, IObservableScore
                 Square square = Instantiate(originalSquare, transform);
                 var squareSize = square.SpriteSize;
                 square.transform.position = new Vector2(coord.x * squareSize.x, coord.y * squareSize.y);
-                square.debugText.text = coord.ToString();
 
                 MatrixIndex index = new MatrixIndex(coord.y, coord.x);
 
@@ -82,6 +79,9 @@ public class Board : MonoBehaviour, IObservableScore
                 squareMatrix.Set(square, index);
             });
 
+        // ポイント配分種別に基づいて、マスにポイントを割り当てる
+        PointAssigner.AssignTo(squareMatrix, conf.PointWeight, conf.MinPoint, conf.MaxPoint);
+
         // ターンが変わったら、全てのマスのBorderをリセット
         turnManager.ObservableCurrentStoneColor.Subscribe(_ => squareMatrix.ForEach(sq => sq.BorderStatus = BorderStatus.None)).AddTo(this);
 
@@ -95,10 +95,7 @@ public class Board : MonoBehaviour, IObservableScore
         );
 
         // 中心のマスに初期石をセットする
-        squareMatrix.Get(size.y / 2 - 1, size.x / 2 - 1).StoneStatus = StoneStatus.White;
-        squareMatrix.Get(size.y / 2    , size.x / 2    ).StoneStatus = StoneStatus.White;
-        squareMatrix.Get(size.y / 2 - 1, size.x / 2    ).StoneStatus = StoneStatus.Black;
-        squareMatrix.Get(size.y / 2    , size.x / 2 - 1).StoneStatus = StoneStatus.Black;
+        squareMatrix.SetInitialStones();
 
         // マス目の生成が終わったのでタスクを完了する
         turnManager.SetSquareGenerateCompleted();

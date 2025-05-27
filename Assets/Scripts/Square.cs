@@ -15,28 +15,73 @@ public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier //
     [SerializeField]
     private Stone stone;
 
+    private StoneStatus stoneStatus = StoneStatus.NonInitialized;
+    private Subject<int> blackStoneCountSubject = new();
+    private Subject<int> whiteStoneCountSubject = new();
+
     // for debug
     public TextMeshPro debugText;
+    private int score;
 
     public Vector2 SpriteSize => spriteRenderer.bounds.size.DisZ();
-    public bool IsStoneExists => stone.IsExist;
-    public Observable<R3.Unit> ObservableStoneChanged => stone.ObservableStatusChanged;
+    public bool IsStoneExists => stoneStatus == StoneStatus.White || stoneStatus == StoneStatus.Black;
+
 
     public StoneStatus StoneStatus
     {
-        get => stone.Status;
-        set => stone.Status = value;
+        get => stoneStatus;
+        set
+        {
+            if (stoneStatus == value) return;
+            // 現在の色に応じて色数の変化を通知する
+            switch (value)
+            {
+                case StoneStatus.Black:
+                    blackStoneCountSubject.OnNext(score); break;
+                case StoneStatus.White:
+                    whiteStoneCountSubject.OnNext(score); break;
+            }
+            switch (stoneStatus)
+            {
+                case StoneStatus.Black:
+                    blackStoneCountSubject.OnNext(-score); break;
+                case StoneStatus.White:
+                    whiteStoneCountSubject.OnNext(-score); break;
+            }
+            this.stoneStatus = value;
+            stone.SetStatus(value);
+        }
     }
     public BorderStatus BorderStatus
     {
         get => border.Status;
         set => border.Status = value;
     }
-    public StoneColor? StoneColor => stone.Color;
+    public StoneColor? StoneColor => stoneStatus.ToStoneColor();
 
-    public bool IsBlack => StoneStatus == StoneStatus.Black;
-    public bool IsWhite => StoneStatus == StoneStatus.White;
 
-    public Observable<int> ObservableBlackStoneCount => stone.ObservableBlackStoneCount;
-    public Observable<int> ObservableWhiteStoneCount => stone.ObservableWhiteStoneCount;
+    public Observable<int> ObservableBlackStoneCount => blackStoneCountSubject.AsObservable();
+    public Observable<int> ObservableWhiteStoneCount => whiteStoneCountSubject.AsObservable();
+
+    public int Score
+    {
+        get => score;
+        set
+        {
+            score = value;
+            if (debugText != null)
+            {
+                debugText.text = score.ToString();
+            }
+        }
+    }
+
+    void Start()
+    {
+        // 初期値が与えられていない場合のみ、Emptyで初期化する
+        if (StoneStatus == StoneStatus.NonInitialized)
+        {
+            StoneStatus = StoneStatus.Empty;
+        }
+    }
 }
