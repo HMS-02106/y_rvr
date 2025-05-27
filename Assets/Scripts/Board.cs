@@ -71,7 +71,7 @@ public class Board : MonoBehaviour, IObservableScore
                 // マスをクリックしたら、石の色を取得してひっくり返る石を取得し、OKなら石を置き、ターンを変える
                 square.ObservableClick
                     .Select(_ => turnManager.GetCurrentStoneColor())
-                    .Where(stoneColor => flipper.Put(index, stoneColor))
+                    .WhereAwait(async (stoneColor, c) => await flipper.Put(index, stoneColor))
                     .Subscribe(stoneColor => turnManager.Switch())
                     .AddTo(this);
 
