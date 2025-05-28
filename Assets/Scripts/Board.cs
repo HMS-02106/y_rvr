@@ -30,7 +30,9 @@ public class Board : MonoBehaviour, IObservableScore
             .TakeWhile(square => square.IsStoneExists)
             .ToList());
 
-    void Start() {
+    void Awake() {
+        Application.targetFrameRate = 30;
+
         var conf = ReversiConf.CreateFromPlayerPrefs();
 
         Vector2Int size = new(conf.ColumnSize, conf.RowSize);
@@ -71,7 +73,7 @@ public class Board : MonoBehaviour, IObservableScore
                 // マスをクリックしたら、石の色を取得してひっくり返る石を取得し、OKなら石を置き、ターンを変える
                 square.ObservableClick
                     .Select(_ => turnManager.GetCurrentStoneColor())
-                    .Where(stoneColor => flipper.Put(index, stoneColor))
+                    .WhereAwait(async (stoneColor, c) => await flipper.Put(index, stoneColor))
                     .Subscribe(stoneColor => turnManager.Switch())
                     .AddTo(this);
 

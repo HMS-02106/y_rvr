@@ -1,6 +1,7 @@
 
 using System;
 using R3;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 public interface IObservableMouseHandler {
@@ -12,7 +13,7 @@ public interface IObservableMouseHandler {
     Observable<Unit> ObservableDragIn { get; }
     Observable<Unit> ObservableDragOut { get; }
 }
-public class MouseHandleableMonoBehaviour : MonoBehaviour, IObservableMouseHandler {
+public class MouseHandleableMonoBehaviour : SerializedMonoBehaviour, IObservableMouseHandler {
     public enum MouseStatus {
         None,
         Hover,

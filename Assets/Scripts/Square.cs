@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -14,6 +15,8 @@ public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier //
     private SquareBorder border;
     [SerializeField]
     private Stone stone;
+    [SerializeField]
+    private Dictionary<StoneColor, ParticleSystem> effectDictionary;
 
     private StoneStatus stoneStatus = StoneStatus.NonInitialized;
     private Subject<int> blackStoneCountSubject = new();
@@ -50,6 +53,12 @@ public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier //
             }
             this.stoneStatus = value;
             stone.SetStatus(value);
+
+            // 石の色に応じてエフェクトを再生する
+            var color = value.ToStoneColor();
+            if (color.HasValue) {
+                effectDictionary[color.Value].Play();
+            }
         }
     }
     public BorderStatus BorderStatus

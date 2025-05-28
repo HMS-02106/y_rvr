@@ -6,6 +6,7 @@ using UnityUtility.Collections;
 using UnityUtility.Enums;
 using UnityUtility.Linq;
 using MoreLinq.Extensions;
+using System.Threading.Tasks;
 
 public class StoneFlipper
 {
@@ -22,7 +23,7 @@ public class StoneFlipper
     /// <param name="matrixIndex">置く場所</param>
     /// <param name="stoneStatus">置く石の色</param>
     /// <returns>石を置くことができたかどうか</returns>
-    public bool Put(MatrixIndex matrixIndex, StoneColor putStoneColor)
+    public async ValueTask<bool> Put(MatrixIndex matrixIndex, StoneColor putStoneColor)
     {
         // ここに石を置いたことでひっくり返る石を取得する
         var flippableSquares = GetFlippableSquareSequencesPerDirection(matrixIndex, putStoneColor).ToList();
@@ -35,7 +36,11 @@ public class StoneFlipper
         // indexに指定の色の石を置く
         board.Squares.Get(matrixIndex).StoneStatus = putStoneColor.ToStoneStatus();
         // 色を変える
-        flippableSquares.ForEach(square => square.StoneStatus = putStoneColor.ToStoneStatus());
+        foreach (var square in flippableSquares)
+        {
+            await Task.Delay(100);
+            square.StoneStatus = putStoneColor.ToStoneStatus();
+        }
         return true;
     }
 
