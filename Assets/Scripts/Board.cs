@@ -30,7 +30,9 @@ public class Board : MonoBehaviour, IObservableScore
             .TakeWhile(square => square.IsStoneExists)
             .ToList());
 
-    void Start() {
+    void Awake() {
+        Application.targetFrameRate = 30;
+
         var conf = ReversiConf.CreateFromPlayerPrefs();
 
         Vector2Int size = new(conf.ColumnSize, conf.RowSize);
