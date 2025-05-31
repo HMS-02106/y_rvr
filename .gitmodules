@@ -1,0 +1,3 @@
+[submodule "Assets/Libraries/UnityUtility"]
+	path = Assets/Libraries/UnityUtility
+	url = git@github.com:yutorisan/UnityUtility.git
