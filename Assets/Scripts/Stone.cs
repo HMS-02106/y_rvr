@@ -12,8 +12,8 @@ public class Stone : MonoBehaviour
     };
 
     private static readonly Dictionary<StoneColor, Color> PreviewStoneColors = new() {
-        { StoneColor.Black, Color.black.WithAlpha(0.5f) },
-        { StoneColor.White, Color.white.WithAlpha(0.5f) },
+        { StoneColor.Black, new Color(0, 0, 0, 0.5f) },
+        { StoneColor.White, new Color(1, 1, 1, 0.5f) },
     };
 
     [SerializeField]
