@@ -43,7 +43,7 @@ public class Board : MonoBehaviour, IObservableScore
 
         // パスとゲーム終了の検知を開始して、パスしたらターンを変える
         passAndGameEndDetector.StartDetection(squarePlaceableInfoProvider, turnManager);
-        passAndGameEndDetector.OnPass += () => turnManager.Switch();
+        passAndGameEndDetector.OnPass += _ => turnManager.Switch();
 
         // マス目を順に生成
         EnumerableFactory

@@ -9,12 +9,12 @@ using System.Linq;
 public class PassAndGameEndDetector : MonoBehaviour
 {
     public event Action OnGameEnd;
-    public event Action OnPass;
+    public event Action<StoneColor> OnPass;
     public void StartDetection(SquarePlaceableInfoProvider squarePlaceableInfoProvider, IObservableCurrentTurnColor observableCurrentTurnColor)
     {
         int passCount = 0;
         // ターンが変わるたびに置ける場所があるかチェックする
-        observableCurrentTurnColor.ObservableCurrentStoneColor.Subscribe(_ =>
+        observableCurrentTurnColor.ObservableCurrentStoneColor.Subscribe(color =>
         {
             if (squarePlaceableInfoProvider.Current.IsAnyPlaceable())
             {
@@ -35,7 +35,7 @@ public class PassAndGameEndDetector : MonoBehaviour
             {
                 // パス
                 Debug.Log("Pass");
-                OnPass?.Invoke();
+                OnPass?.Invoke(color);
             }
         })
         .AddTo(this);
