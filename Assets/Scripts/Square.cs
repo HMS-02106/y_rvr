@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using R3;
 using TMPro;
@@ -18,7 +19,6 @@ public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier //
     [SerializeField]
     private Dictionary<StoneColor, ParticleSystem> effectDictionary;
 
-    private StoneStatus stoneStatus = StoneStatus.NonInitialized;
     private Subject<int> blackStoneCountSubject = new();
     private Subject<int> whiteStoneCountSubject = new();
 
@@ -27,47 +27,19 @@ public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier //
     private int score;
 
     public Vector2 SpriteSize => spriteRenderer.bounds.size.DisZ();
-    public bool IsStoneExists => stoneStatus == StoneStatus.White || stoneStatus == StoneStatus.Black;
-
+    public bool IsStoneExists => stone.IsExist;
 
     public StoneStatus StoneStatus
     {
-        get => stoneStatus;
-        set
-        {
-            if (stoneStatus == value) return;
-            // 現在の色に応じて色数の変化を通知する
-            switch (value)
-            {
-                case StoneStatus.Black:
-                    blackStoneCountSubject.OnNext(score); break;
-                case StoneStatus.White:
-                    whiteStoneCountSubject.OnNext(score); break;
-            }
-            switch (stoneStatus)
-            {
-                case StoneStatus.Black:
-                    blackStoneCountSubject.OnNext(-score); break;
-                case StoneStatus.White:
-                    whiteStoneCountSubject.OnNext(-score); break;
-            }
-            this.stoneStatus = value;
-            stone.SetStatus(value);
-
-            // 石の色に応じてエフェクトを再生する
-            var color = value.ToStoneColor();
-            if (color.HasValue) {
-                effectDictionary[color.Value].Play();
-            }
-        }
+        get => stone.Current;
+        set => stone.SetStatus(value);
     }
     public BorderStatus BorderStatus
     {
         get => border.Status;
         set => border.Status = value;
     }
-    public StoneColor? StoneColor => stoneStatus.ToStoneColor();
-
+    public StoneColor? StoneColor => stone.Current.ToStoneColor();
 
     public Observable<int> ObservableBlackStoneCount => blackStoneCountSubject.AsObservable();
     public Observable<int> ObservableWhiteStoneCount => whiteStoneCountSubject.AsObservable();
@@ -85,12 +57,44 @@ public class Square : MouseHandleableMonoBehaviour, IColorCountChangeNotifier //
         }
     }
 
-    void Start()
+    public Action SetPreviewStone(StoneColor color)
+    {
+        stone.SetPreview(color);
+        return stone.ClearPreview;
+    }
+
+    void Awake()
     {
         // 初期値が与えられていない場合のみ、Emptyで初期化する
-        if (StoneStatus == StoneStatus.NonInitialized)
+        if (stone.Current == StoneStatus.NonInitialized)
         {
-            StoneStatus = StoneStatus.Empty;
+            stone.SetStatus(StoneStatus.Empty);
         }
+
+        stone.ObservableChangeInfo.Subscribe(changeInfo =>
+        {
+            if (changeInfo.CurrentStatus.HasValue)
+            {
+                switch (changeInfo.CurrentStatus.Value)
+                {
+                    case global::StoneColor.Black:
+                        blackStoneCountSubject.OnNext(score); break;
+                    case global::StoneColor.White:
+                        whiteStoneCountSubject.OnNext(score); break;
+                }
+                // 石を置いたエフェクト再生
+                effectDictionary[changeInfo.CurrentStatus.Value].Play();
+            }
+            if (changeInfo.PreviousStatus.HasValue)
+            {
+                switch (changeInfo.PreviousStatus.Value)
+                {
+                    case global::StoneColor.Black:
+                        blackStoneCountSubject.OnNext(-score); break;
+                    case global::StoneColor.White:
+                        whiteStoneCountSubject.OnNext(-score); break;
+                }
+            }
+        });
     }
 }

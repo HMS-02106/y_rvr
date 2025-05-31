@@ -58,21 +58,23 @@ public class Board : MonoBehaviour, IObservableScore
                 // マスにマウスが乗ったら、石の色を取得してValidateし、OKならBorderを変える
                 square.ObservableEnter
                     .Where(_ => squarePlaceableInfoProvider.Current.IsPlaceable(index))
-                    .Select(_ => flipper.GetFlippableSquareSequencesPerDirection(index, turnManager.GetCurrentStoneColor()))
+                    .Select(_ => flipper.GetFlippableSquareSequencesPerDirection(index, turnManager.Current))
                     .Where(sq => sq.Count() > 0)
                     .SubscribeAwait(async (sq, ct) =>
                     {
                         square.BorderStatus = BorderStatus.Selected;
+                        var clearAction = square.SetPreviewStone(turnManager.Current);
                         sq.ForEach(sq => sq.BorderStatus = BorderStatus.Predicted);
                         await square.ObservableExit.FirstAsync();
                         square.BorderStatus = BorderStatus.None;
+                        clearAction();
                         sq.ForEach(sq => sq.BorderStatus = BorderStatus.None);
                     })
                     .AddTo(this);
 
                 // マスをクリックしたら、石の色を取得してひっくり返る石を取得し、OKなら石を置き、ターンを変える
                 square.ObservableClick
-                    .Select(_ => turnManager.GetCurrentStoneColor())
+                    .Select(_ => turnManager.Current)
                     .WhereAwait(async (stoneColor, c) => await flipper.Put(index, stoneColor))
                     .Subscribe(stoneColor => turnManager.Switch())
                     .AddTo(this);

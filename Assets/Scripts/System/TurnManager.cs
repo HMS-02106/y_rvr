@@ -17,7 +17,7 @@ public class TurnManager : MonoBehaviour, IObservableCurrentTurnColor
     /// 現在の石の色を取得する
     /// </summary>
     /// <returns></returns>
-    public StoneColor GetCurrentStoneColor() => currentStoneColor.Value;
+    public StoneColor Current => currentStoneColor.Value;
 
     public Observable<StoneColor> ObservableCurrentStoneColor =>
         Observable
